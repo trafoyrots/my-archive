@@ -2,60 +2,65 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retro Game Archive</title>
-    
     <link rel="stylesheet" href="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.css">
     <script src="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.js"></script>
-
     <style>
-        body { background: #000; color: #fff; margin: 0; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #lobby { text-align: center; background: #111; padding: 40px; border: 1px solid #333; border-radius: 8px; }
-        .btn-launch { background: #3f51b5; color: white; border: none; padding: 15px 30px; font-size: 18px; cursor: pointer; border-radius: 4px; font-weight: bold; }
-        .btn-launch:hover { background: #283593; }
-        #emulator-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; background: #000; }
-        #dos-canvas { width: 100%; height: 100%; }
-        .exit-btn { position: absolute; top: 10px; right: 10px; z-index: 10; background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 5px 10px; cursor: pointer; }
+        /* í™”ë©´ì´ ê¹¨ì§€ì§€ ì•Šë„ë¡ ê°•ì œ ê³ ì •í•˜ëŠ” ìŠ¤íƒ€ì¼ */
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: #fff; overflow: hidden; }
+        #app { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        
+        /* ë¡œê·¸ì¸/ë¡œë¹„ ë°•ìŠ¤ */
+        .box { background: #1a1a1a; padding: 40px; border: 1px solid #333; border-radius: 8px; text-align: center; min-width: 300px; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #444; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+        
+        /* ì—ë®¬ë ˆì´í„° ìº”ë²„ìŠ¤ ê³ ì • */
+        #jsdos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; z-index: 100; }
+        #dos-canvas { width: 100% !important; height: 100% !important; }
     </style>
 </head>
 <body>
 
-    <div id="lobby">
-        <h1 style="margin-bottom: 30px;">GAME ARCHIVE</h1>
-        <button class="btn-launch" onclick="launchGame()">´ëÇ×ÇØ½Ã´ë 2 ½ÇÇà</button>
-        <p style="color: #666; margin-top: 15px; font-size: 14px;">°æ·Î: games/uw2.zip</p>
+    <div id="app">
+        <div id="login-box" class="box">
+            <h2 style="margin-top:0">SYSTEM ACCESS</h2>
+            <input type="password" id="pw" placeholder="Password" onkeypress="if(event.keyCode==13) doLogin()">
+            <button onclick="doLogin()">LOGIN</button>
+        </div>
+
+        <div id="lobby" class="box" style="display:none">
+            <h2>GAME LIST</h2>
+            <div style="padding:20px; border:1px solid #555; cursor:pointer;" onclick="start('./games/uw2.zip')">
+                ëŒ€í•­í•´ì‹œëŒ€ 2 ì‹¤í–‰
+            </div>
+        </div>
     </div>
 
-    <div id="emulator-container">
-        <button class="exit-btn" onclick="location.reload()">Á¾·á(ESC)</button>
+    <div id="jsdos-container">
         <canvas id="dos-canvas"></canvas>
     </div>
 
     <script>
-        function launchGame() {
-            // 1. È­¸é ÀüÈ¯
-            document.getElementById("lobby").style.display = "none";
-            document.getElementById("emulator-container").style.display = "block";
-
-            // 2. °æ·Î °íÁ¤ (ÇöÀç µµ¸ŞÀÎ ·çÆ® ±â¹İÀ¸·Î games/uw2.zip È£Ãâ)
-            const gameFile = "games/uw2.zip";
-            const fullUrl = window.location.origin + window.location.pathname.replace('index.html', '') + gameFile;
-            
-            console.log("Loading Game from:", fullUrl);
-
-            // 3. ¿¡¹Ä·¹ÀÌÅÍ ½ÇÇà
-            if (typeof Dos === "undefined") {
-                alert("¿¡¹Ä·¹ÀÌÅÍ ¶óÀÌºê·¯¸®¸¦ ºÒ·¯¿ÀÁö ¸øÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇÏ¼¼¿ä.");
-                return;
+        function doLogin() {
+            if (document.getElementById("pw").value === "1234") {
+                document.getElementById("login-box").style.display = "none";
+                document.getElementById("lobby").style.display = "block";
             }
+        }
+
+        function start(relPath) {
+            document.getElementById("app").style.display = "none";
+            document.getElementById("jsdos-container").style.display = "block";
+
+            // ê²½ë¡œë¥¼ ì ˆëŒ€ ì£¼ì†Œë¡œ ê°•ì œ ë³€í™˜
+            const gameUrl = new URL(relPath, window.location.href).href;
+            console.log("Loading:", gameUrl);
 
             Dos(document.getElementById("dos-canvas"), {
                 wdosboxUrl: "https://js-dos.com/v7/build/releases/latest/js-dos/wdosbox.js"
-            }).run(fullUrl).then((ci) => {
-                console.log("±¸µ¿ ¼º°ø");
-            }).catch((err) => {
-                console.error("±¸µ¿ ½ÇÆĞ:", err);
-                alert("°ÔÀÓ ÆÄÀÏÀ» Ã£À» ¼ö ¾ø°Å³ª ½ÇÇà¿¡ ½ÇÆĞÇß½À´Ï´Ù.\nÁÖ¼Ò: " + fullUrl);
+            }).run(gameUrl).catch(err => {
+                alert("ì‹¤í–‰ ì‹¤íŒ¨: " + err.message);
                 location.reload();
             });
         }
