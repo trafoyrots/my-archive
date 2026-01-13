@@ -6,26 +6,18 @@
     <link rel="stylesheet" href="https://v6p.js-dos.com/6.22/js-dos.css">
     <script src="https://v6p.js-dos.com/6.22/js-dos.js"></script>
     <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: #fff; overflow: hidden; }
-        #app { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
-        .box { background: #1a1a1a; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 8px; }
-        input { width: 100%; padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .container { background: #111; padding: 30px; border: 1px solid #333; text-align: center; }
+        button { padding: 10px 20px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; }
         #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; }
-        canvas { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
-    <div id="app">
-        <div id="login-box" class="box">
-            <h2>SYSTEM ACCESS</h2>
-            <input type="password" id="pw" placeholder="Password" onkeypress="if(event.keyCode==13) doLogin()">
-            <button onclick="doLogin()">LOGIN</button>
-        </div>
-        <div id="lobby" class="box" style="display:none">
-            <h2>GAME LIST</h2>
-            <button onclick="start('./games/uw2.zip')">대항해시대 2 실행</button>
+    <div id="setup">
+        <div class="container">
+            <h2>SYSTEM READY</h2>
+            <button onclick="launch()">대항해시대 2 실행</button>
         </div>
     </div>
 
@@ -34,29 +26,26 @@
     </div>
 
     <script>
-        function doLogin() {
-            if (document.getElementById("pw").value === "1234") {
-                document.getElementById("login-box").style.display = "none";
-                document.getElementById("lobby").style.display = "block";
-            }
-        }
-
-        function start(relPath) {
-            document.getElementById("app").style.display = "none";
+        function launch() {
+            document.getElementById("setup").style.display = "none";
             document.getElementById("dos-container").style.display = "block";
 
-            const gameUrl = new URL(relPath, window.location.href).href;
+            // 브라우저가 파일을 캐시하지 않도록 쿼리 스트링 추가
+            const gameUrl = "./games/uw2.zip?v=" + Date.now();
 
-            // v6 버전 엔진으로 우회하여 magic number 에러 해결 시도
             Dos(document.getElementById("dos-canvas"), {
                 wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
             }).ready((fs, main) => {
-                main(["-c", "imgmount c " + gameUrl + " -t zip", "c:", "fmdrv.com", "voyage2.exe"]).then(() => {
-                    console.log("Game started");
+                fs.extract(gameUrl).then(() => {
+                    // 압축을 푼 뒤 내부 파일 목록을 콘솔에 찍어 확인(F12에서 확인 가능)
+                    console.log("Files extracted.");
+                    // 실행 파일 이름을 대문자로 시도 (대부분의 도스 게임은 대문자임)
+                    main(["VOYAGE2.EXE"]).then(() => {
+                        console.log("Command sent.");
+                    });
                 });
             }).catch(err => {
-                console.error(err);
-                alert("구동 실패: " + err.message);
+                alert("오류 발생: " + err.message);
             });
         }
     </script>
