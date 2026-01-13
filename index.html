@@ -38,22 +38,19 @@
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // v8 엔진 구동 (then 방식)
+            /**
+             * 에러 해결 포인트:
+             * 1. .then()을 제거했다. (v8 기본 호출 방식 준수)
+             * 2. url을 직접 전달했다.
+             */
             Dos(document.getElementById("dos"), {
-                url: "./bundle.jsdos", // 파일이 최상위에 있어야 함
-                noCloud: true     // 클라우드 저장 안내창 최소화
-            }).then((runtime) => {
-                console.log("v8 엔진 로드 성공");
-                
-                // 게임 실행 명령어 강제 주입
-                // 1. 폴더 진입 2. 드라이버 실행 3. 게임 실행
-                runtime.dos.main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.COM"]);
-                
-            }).catch((err) => {
-                // 여기서 에러가 난다면 파일 경로가 틀린 것임
-                alert("실행 오류: " + err.message);
-                console.error(err);
+                url: "./bundle.jsdos", // Studio에서 만든 확장자로 변경했다면 이대로 뒀다.
+                noCloud: true,
+                autostart: true // 자동 실행 옵션 추가
             });
+            
+            // 만약 .jsdos 파일 안에 실행 정보가 있다면 아래 명령어는 없어도 된다.
+            // 하지만 수동 실행이 필요하다면 별도의 지연 실행이 필요할 수 있다.
         }
     </script>
 </body>
