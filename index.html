@@ -2,54 +2,57 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Retro Game Archive</title>
-    
-    <link rel="stylesheet" href="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.css">
-    <script src="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.js"></script>
-
+    <title>대항해시대2 웹버전</title>
+    <link rel="stylesheet" href="https://v6p.js-dos.com/6.22/js-dos.css">
+    <script src="https://v6p.js-dos.com/6.22/js-dos.js"></script>
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .container { background: #111; padding: 30px; border: 1px solid #333; text-align: center; border-radius: 8px; }
-        button { padding: 12px 24px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
-        #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; z-index: 100; }
-        canvas { width: 100%; height: 100%; }
+        .login-box { background: #1a1a1a; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 8px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 100%; }
+        #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; }
+        .dosbox-container { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
-    <div id="setup">
-        <div class="container">
-            <h2>SYSTEM READY</h2>
-            <p style="color: #888; font-size: 14px; margin-bottom: 20px;">v7 Core Engine</p>
-            <button onclick="launch()">대항해시대 2 실행</button>
+    <div id="ui-layer">
+        <div class="login-box">
+            <h2>SYSTEM ACCESS</h2>
+            <input type="password" id="pw" placeholder="Password" onkeypress="if(event.keyCode==13) start()">
+            <button onclick="start()">LOGIN & PLAY</button>
         </div>
     </div>
 
     <div id="dos-container">
-        <canvas id="jsdos-canvas"></canvas>
+        <div id="dos-canvas" class="dosbox-container"></div>
     </div>
 
     <script>
-        function launch() {
-            // 라이브러리가 로드되었는지 최종 확인
-            if (typeof Dos === "undefined") {
-                alert("에뮬레이터 라이브러리 로딩에 실패했다. 새로고침(F5) 후 다시 시도해라.");
+        function start() {
+            const pw = document.getElementById("pw").value;
+            if (pw !== "1234") {
+                alert("비밀번호가 틀렸다.");
                 return;
             }
 
-            document.getElementById("setup").style.display = "none";
+            document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos-container").style.display = "block";
 
-            const gameUrl = "./games/uw2.zip";
-
-            // v7 최신 표준 방식으로 구동
-            Dos(document.getElementById("jsdos-canvas"), {
-                wdosboxUrl: "https://js-dos.com/v7/build/releases/latest/js-dos/wdosbox.js"
-            }).run(gameUrl).then(ci => {
-                console.log("Game Loaded!");
+            // js-dos v6 실행 엔진 호출
+            Dos(document.getElementById("dos-canvas"), {
+                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
+            }).ready((fs, main) => {
+                // 게임 파일 압축 해제 및 실행
+                fs.extract("./games/uw2.zip").then(() => {
+                    // 사운드 드라이버 실행 후 게임 실행 (순서대로)
+                    main(["fmdrv.com", "voyage2.exe"]).then(() => {
+                        console.log("Game Started");
+                    });
+                });
             }).catch(err => {
-                console.error(err);
-                alert("구동 에러: " + err.message);
+                alert("에러 발생: " + err.message);
+                location.reload();
             });
         }
     </script>
