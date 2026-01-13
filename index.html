@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>대항해시대 2 - 웹 아카이브</title>
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/js-dos/mg-archive/static/6.22/js-dos.css">
-    <script src="https://cdn.jsdelivr.net/gh/js-dos/mg-archive/static/6.22/js-dos.js"></script>
+    <link rel="stylesheet" href="./js-dos.css">
+    <script src="./js-dos.js"></script>
 
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -34,21 +34,21 @@
                 alert("비밀번호 오류"); return;
             }
 
-            // 라이브러리 로드 확인
+            // 내 파일이 잘 로드되었는지 확인
             if (typeof Dos === "undefined") {
-                alert("엔진 로드 실패! 인터넷 연결이나 주소를 확인해라.");
+                alert("엔진 로드 실패! 파일을 저장소에 제대로 만들었는지 확인해라.");
                 return;
             }
 
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // wdosboxUrl도 안정적인 JSDelivr 주소로 설정
+            // wdosbox.js는 엔진 내부에서 자동으로 불러오는 방식이므로 가장 범용적인 주소를 고정으로 박아둠
             Dos(document.getElementById("dos"), {
-                wdosboxUrl: "https://cdn.jsdelivr.net/gh/js-dos/mg-archive/static/6.22/wdosbox.js"
+                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
             }).ready((fs, main) => {
                 fs.extract("./games/uw2.zip").then(() => {
-                    // 폴더 자동 진입 후 대문자 실행 파일 구동
+                    // 대문자 명령어 실행
                     main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
                 });
             }).catch(err => {
