@@ -40,7 +40,7 @@
 
             // v8 엔진 구동 (then 방식)
             Dos(document.getElementById("dos"), {
-                url: "./bundle.zip", // 파일이 최상위에 있어야 함
+                url: "./bundle.jsdos", // 파일이 최상위에 있어야 함
                 noCloud: true     // 클라우드 저장 안내창 최소화
             }).then((runtime) => {
                 console.log("v8 엔진 로드 성공");
@@ -58,3 +58,4 @@
     </script>
 </body>
 </html>
+
