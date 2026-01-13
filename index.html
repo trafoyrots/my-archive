@@ -58,7 +58,7 @@
                 
                 // 3. 수동 명령어 주입 (대문자 파일명 반영)
                 // v8에서는 dos.main을 통해 DOS 명령어를 직접 보낼 수 있다.
-                runtime.dos.main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
+                runtime.dos.main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.COM"]);
                 
             }).catch((err) => {
                 console.error(err);
@@ -68,3 +68,4 @@
     </script>
 </body>
 </html>
+
