@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대항해시대 2 - 웹 아카이브</title>
+    <title>대항해시대 2 웹 아카이브</title>
     
     <link rel="stylesheet" href="./js-dos.css">
     <script src="./js-dos.js"></script>
@@ -11,10 +11,8 @@
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .login-box { background: #111; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        h2 { margin-top: 0; color: #3f51b5; }
         input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; font-size: 16px; }
         button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; width: 100%; }
-        button:hover { background: #5c6bc0; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
     </style>
 </head>
@@ -22,11 +20,10 @@
 
     <div id="ui-layer">
         <div class="login-box">
-            <h2>SYSTEM READY</h2>
-            <p style="font-size: 12px; color: #666;">ENTER ACCESS CODE</p>
+            <h2 style="color:#3f51b5; margin-top:0;">SYSTEM READY</h2>
             <input type="password" id="pw" placeholder="PASSWORD" onkeypress="if(event.keyCode==13) launch()">
             <br>
-            <button onclick="launch()">INITIALIZE</button>
+            <button onclick="launch()">GAME START</button>
         </div>
     </div>
 
@@ -34,37 +31,25 @@
 
     <script>
         function launch() {
-            const password = document.getElementById("pw").value;
-            if (password !== "1234") {
-                alert("비밀번호가 틀렸다.");
-                return;
-            }
-
-            // 라이브러리 로드 체크
-            if (typeof Dos === "undefined") {
-                alert("엔진(js-dos.js)이 로드되지 않았다. 파일이 저장소에 있는지 확인해라.");
+            if (document.getElementById("pw").value !== "1234") {
+                alert("비밀번호 오류");
                 return;
             }
 
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // 파일 경로를 절대 주소로 자동 변환 (URL 입력창 방지)
-            const rootPath = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
-            const gameUrl = rootPath + "games/uw2.zip";
-            
-            console.log("Attempting to load game from:", gameUrl);
+            // 가장 직관적인 상대 경로 사용
+            const gameFile = "games/uw2.zip";
 
             Dos(document.getElementById("dos"), {
-                // 핵심 엔진 주소 (안정적인 v6 서버 사용)
                 wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
             }).ready((fs, main) => {
-                fs.extract(gameUrl).then(() => {
-                    console.log("추출 완료. 게임을 실행한다.");
-                    // 대문자 실행 파일 및 하위 폴더 진입 명령어
+                fs.extract(gameFile).then(() => {
+                    // 1. 하위 폴더 진입 시도 2. 드라이버 실행 3. 게임 실행
                     main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
                 }).catch(err => {
-                    alert("파일을 찾을 수 없다: " + gameUrl + "\n이름과 위치를 확인해라.");
+                    alert("파일을 가져오지 못했다. 경로를 확인해라: " + gameFile);
                     console.error(err);
                 });
             });
