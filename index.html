@@ -3,28 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대항해시대 2 아카이브</title>
+    <title>대항해시대 2 - 웹 아카이브</title>
     
-    <link rel="stylesheet" href="js-dos.css">
-    <script src="js-dos.js"></script>
+    <link rel="stylesheet" href="./js-dos.css">
+    <script src="./js-dos.js"></script>
 
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .login-box { background: #111; padding: 40px; border: 2px solid #333; text-align: center; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        h2 { margin-top: 0; color: #3f51b5; letter-spacing: 2px; }
-        input { width: 100%; padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; text-align: center; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
-        button:hover { background: #5c6bc0; }
-        #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
+        html, body { height: 100%; margin: 0; background: #000; overflow: hidden; }
+        /* 로그인 화면 스타일 */
+        .login-layer { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; color: #fff; font-family: sans-serif;
+        }
+        .login-box { padding: 40px; border: 1px solid #333; background: #111; text-align: center; border-radius: 10px; }
+        input { padding: 10px; margin: 10px; background: #222; border: 1px solid #444; color: #fff; text-align: center; }
+        button { padding: 10px 20px; background: #3f51b5; color: #fff; border: none; cursor: pointer; }
+        
+        /* 게임 화면 스타일 */
+        #dos { width: 100%; height: 100%; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="ui-layer">
+    <div id="ui-layer" class="login-layer">
         <div class="login-box">
-            <h2>SYSTEM READY</h2>
+            <h2>SYSTEM ACCESS</h2>
             <input type="password" id="pw" placeholder="PASSWORD" onkeypress="if(event.keyCode==13) launch()">
-            <button onclick="launch()">INITIALIZE GAME</button>
+            <br>
+            <button onclick="launch()">INITIALIZE</button>
         </div>
     </div>
 
@@ -32,23 +38,25 @@
 
     <script>
         function launch() {
-            if (document.getElementById("pw").value !== "1234") {
+            const password = document.getElementById("pw").value;
+            if (password !== "1234") {
                 alert("비밀번호 오류"); return;
             }
 
+            // UI 전환
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // Studio에서 변환한 .jsdos 파일을 직접 로드했다.
-            // jsdos.json 설정이 포함되어 있어 별도의 main 명령어가 필요 없다.
+            // 참고한 사이트의 v8 구동 방식
+            // .jsdos 파일 안에 실행 정보(VOYAGE2.EXE 등)가 다 들어있다.
             Dos(document.getElementById("dos"), {
                 url: "./uw2.jsdos",
                 noCloud: true
             }).then((runtime) => {
-                console.log("Game started successfully with v8 bundle.");
+                console.log("Game Loaded Successfully");
             }).catch((err) => {
-                alert("실행 오류: " + err.message);
                 console.error(err);
+                alert("구동 실패: " + err.message);
             });
         }
     </script>
