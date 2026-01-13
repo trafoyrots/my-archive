@@ -38,10 +38,10 @@
             // v6 표준 문법 (.ready)
             Dos(document.getElementById("dos"), {
                 // 이 주소는 v6 전용 엔진 파일이다.
-                wdosboxUrl: "https://my-archive-7bj.pages.dev/js-dos.js"
+                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
             }).ready(function (fs, main) {
                 // 파일이 최상위에 있어야 한다.
-                fs.extract("bundle2.zip").then(function () {
+                fs.extract("bundle.jsdos").then(function () {
                     // 실행 명령어 주입
                     main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.COM"]);
                 }).catch(function (err) {
