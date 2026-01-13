@@ -9,8 +9,8 @@
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .login-box { background: #111; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 10px; }
-        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; font-size: 16px; }
-        button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; width: 100%; }
+        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; }
+        button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 100%; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; }
     </style>
 </head>
@@ -36,15 +36,20 @@
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // v8 엔진 구동
+            // v6 방식 (.ready 사용)
+            // wdosboxUrl은 외부 서버에서 안정적으로 가져온다.
             Dos(document.getElementById("dos"), {
-                url: "./uw2.zip",
-            }).then((runtime) => {
-                // "Hello, guest" 창이 뜨더라도 백그라운드에서 실행 명령을 내린다.
-                // 1. 하위 폴더 진입 2. 사운드 드라이버 3. 게임 본체
-                runtime.dos.main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
-            }).catch(err => {
-                alert("구동 실패: " + err.message);
+                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
+            }).ready(function (fs, main) {
+                // Not a zip archive 에러를 방지하기 위해 절대 경로 사용 시도
+                var gameUrl = window.location.origin + "/uw2.zip";
+                
+                fs.extract(gameUrl).then(function () {
+                    // 압축 파일 내 실행 (대문자 반영)
+                    main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
+                }).catch(function (err) {
+                    alert("파일 압축 해제 실패: " + err);
+                });
             });
         }
     </script>
