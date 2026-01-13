@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대항해시대 2 웹 아카이브</title>
+    <title>대항해시대 2 - 웹 아카이브</title>
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/js-dos/6.22.20/js-dos.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-dos/6.22.20/js-dos.js"></script>
+    <link rel="stylesheet" href="js-dos.css">
+    <script src="js-dos.js"></script>
 
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .login-box { background: #111; padding: 40px; border: 2px solid #333; text-align: center; border-radius: 10px; }
-        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; font-size: 16px; }
-        button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 100%; border-radius: 5px; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .login-box { background: #111; padding: 40px; border: 2px solid #333; text-align: center; border-radius: 12px; }
+        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; font-size: 16px; border-radius: 4px; }
+        button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; width: 100%; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
     </style>
 </head>
@@ -23,7 +23,7 @@
             <h2 style="color:#3f51b5; margin-top:0;">SYSTEM READY</h2>
             <input type="password" id="pw" placeholder="PASSWORD" onkeypress="if(event.keyCode==13) launch()">
             <br>
-            <button onclick="launch()">GAME START</button>
+            <button onclick="launch()">INITIALIZE GAME</button>
         </div>
     </div>
 
@@ -31,28 +31,38 @@
 
     <script>
         function launch() {
-            if (document.getElementById("pw").value !== "1234") {
-                alert("비밀번호 오류"); return;
+            const password = document.getElementById("pw").value;
+            if (password !== "1234") {
+                alert("ACCESS DENIED");
+                return;
             }
 
+            // 엔진 존재 여부 최종 확인
             if (typeof Dos === "undefined") {
-                alert("라이브러리 로드 실패! cdnjs 접속이 차단되었습니다."); return;
+                alert("엔진 로드 실패: js-dos.js 파일이 없거나 차단되었습니다.");
+                return;
             }
 
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // v6 표준 실행 방식
+            /**
+             * 2. v8 구동 설정
+             * Cloudflare Pages에서 가장 안전한 호출 방식인 상대 경로를 사용했다.
+             */
             Dos(document.getElementById("dos"), {
-                wdosboxUrl: "https://cdnjs.cloudflare.com/ajax/libs/js-dos/6.22.20/wdosbox.js"
-            }).ready(function (fs, main) {
-                // 현재 주소에서 uw2.zip을 직접 호출
-                fs.extract("uw2.zip").then(function () {
-                    // 내부 파일 실행 (대문자 반영)
-                    main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
-                }).catch(function (err) {
-                    alert("게임 파일(uw2.zip)을 찾을 수 없거나 압축 해제에 실패했다.");
-                });
+                url: "uw2.zip", // 파일이 index.html과 같은 위치에 있어야 함
+                noCloud: true   // 클라우드 저장 안내창 생략
+            }).then((runtime) => {
+                console.log("Runtime Loaded");
+                
+                // 3. 수동 명령어 주입 (대문자 파일명 반영)
+                // v8에서는 dos.main을 통해 DOS 명령어를 직접 보낼 수 있다.
+                runtime.dos.main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
+                
+            }).catch((err) => {
+                console.error(err);
+                alert("실행 오류: " + err.message);
             });
         }
     </script>
