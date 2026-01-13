@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Retro Game Archive</title>
-    <link rel="stylesheet" href="https://v6p.js-dos.com/6.22/js-dos.css">
-    <script src="https://v6p.js-dos.com/6.22/js-dos.js"></script>
+    
+    <link rel="stylesheet" href="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.css">
+    <script src="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.js"></script>
+
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .container { background: #111; padding: 30px; border: 1px solid #333; text-align: center; }
-        button { padding: 10px 20px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; }
-        #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; }
+        .container { background: #111; padding: 30px; border: 1px solid #333; text-align: center; border-radius: 8px; }
+        button { padding: 12px 24px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; z-index: 100; }
+        canvas { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
@@ -17,35 +20,36 @@
     <div id="setup">
         <div class="container">
             <h2>SYSTEM READY</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 20px;">v7 Core Engine</p>
             <button onclick="launch()">대항해시대 2 실행</button>
         </div>
     </div>
 
     <div id="dos-container">
-        <div id="dos-canvas"></div>
+        <canvas id="jsdos-canvas"></canvas>
     </div>
 
     <script>
         function launch() {
+            // 라이브러리가 로드되었는지 최종 확인
+            if (typeof Dos === "undefined") {
+                alert("에뮬레이터 라이브러리 로딩에 실패했다. 새로고침(F5) 후 다시 시도해라.");
+                return;
+            }
+
             document.getElementById("setup").style.display = "none";
             document.getElementById("dos-container").style.display = "block";
 
-            // 브라우저가 파일을 캐시하지 않도록 쿼리 스트링 추가
-            const gameUrl = "./games/uw2.zip?v=" + Date.now();
+            const gameUrl = "./games/uw2.zip";
 
-            Dos(document.getElementById("dos-canvas"), {
-                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
-            }).ready((fs, main) => {
-                fs.extract(gameUrl).then(() => {
-                    // 압축을 푼 뒤 내부 파일 목록을 콘솔에 찍어 확인(F12에서 확인 가능)
-                    console.log("Files extracted.");
-                    // 실행 파일 이름을 대문자로 시도 (대부분의 도스 게임은 대문자임)
-                    main(["VOYAGE2.EXE"]).then(() => {
-                        console.log("Command sent.");
-                    });
-                });
+            // v7 최신 표준 방식으로 구동
+            Dos(document.getElementById("jsdos-canvas"), {
+                wdosboxUrl: "https://js-dos.com/v7/build/releases/latest/js-dos/wdosbox.js"
+            }).run(gameUrl).then(ci => {
+                console.log("Game Loaded!");
             }).catch(err => {
-                alert("오류 발생: " + err.message);
+                console.error(err);
+                alert("구동 에러: " + err.message);
             });
         }
     </script>
