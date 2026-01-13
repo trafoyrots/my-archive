@@ -51,7 +51,7 @@
              * Cloudflare Pages에서 가장 안전한 호출 방식인 상대 경로를 사용했다.
              */
             Dos(document.getElementById("dos"), {
-                url: "uw2.zip", // 파일이 index.html과 같은 위치에 있어야 함
+                url: "bundle.zip", // 파일이 index.html과 같은 위치에 있어야 함
                 noCloud: true   // 클라우드 저장 안내창 생략
             }).then((runtime) => {
                 console.log("Runtime Loaded");
@@ -68,4 +68,5 @@
     </script>
 </body>
 </html>
+
 
