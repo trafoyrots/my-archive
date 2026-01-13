@@ -11,7 +11,7 @@
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .login-box { background: #111; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 10px; }
-        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; }
+        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; font-size: 16px; }
         button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; width: 100%; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; }
     </style>
@@ -39,17 +39,18 @@
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // 파일을 같은 위치에 두었으므로 경로를 제거하고 파일명만 사용했다.
-            const gameFile = "uw2.zip";
+            // Cloudflare Pages에서 가장 안전한 상대 경로 호출 방식
+            var gameUrl = "uw2.zip"; 
 
             Dos(document.getElementById("dos"), {
                 wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
             }).ready((fs, main) => {
-                fs.extract(gameFile).then(() => {
-                    // 압축 파일 내부의 실행 파일 구동 (대문자 유지)
+                // 파일을 직접 읽어온다
+                fs.extract(gameUrl).then(() => {
+                    // 내부 파일 실행 (전부 대문자)
                     main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
                 }).catch(err => {
-                    alert("파일을 찾지 못했다. uw2.zip이 index.html과 같은 위치에 있는지 확인해라.");
+                    alert("파일 로딩 실패! 아래 주소를 직접 확인해라.\nhttps://my-archive-7bj.pages.dev/uw2.zip");
                     console.error(err);
                 });
             });
