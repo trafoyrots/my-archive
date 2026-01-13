@@ -2,25 +2,31 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>대항해시대2 웹버전</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대항해시대 2 - 웹 아카이브</title>
+    
     <link rel="stylesheet" href="https://v6p.js-dos.com/6.22/js-dos.css">
     <script src="https://v6p.js-dos.com/6.22/js-dos.js"></script>
+
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .login-box { background: #1a1a1a; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 8px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; background: #222; border: 1px solid #444; color: #fff; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 100%; }
-        #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .login-container { background: #111; padding: 40px; border: 2px solid #333; text-align: center; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); width: 300px; }
+        h2 { margin-top: 0; color: #3f51b5; letter-spacing: 2px; }
+        input { width: 100%; padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; text-align: center; }
+        button { width: 100%; padding: 12px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; transition: 0.3s; }
+        button:hover { background: #5c6bc0; }
+        #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; background: #000; }
         .dosbox-container { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
     <div id="ui-layer">
-        <div class="login-box">
-            <h2>SYSTEM ACCESS</h2>
-            <input type="password" id="pw" placeholder="Password" onkeypress="if(event.keyCode==13) start()">
-            <button onclick="start()">LOGIN & PLAY</button>
+        <div class="login-container">
+            <h2>SYSTEM READY</h2>
+            <p style="font-size: 12px; color: #666;">ENTER ACCESS CODE</p>
+            <input type="password" id="pw" placeholder="PASSWORD" onkeypress="if(event.keyCode==13) launch()">
+            <button onclick="launch()">INITIALIZE GAME</button>
         </div>
     </div>
 
@@ -29,29 +35,39 @@
     </div>
 
     <script>
-        function start() {
+        function launch() {
             const pw = document.getElementById("pw").value;
+            // 비밀번호 설정 (원하는 대로 수정 가능)
             if (pw !== "1234") {
-                alert("비밀번호가 틀렸다.");
+                alert("ACCESS DENIED: 비밀번호가 틀렸다.");
                 return;
             }
 
+            // UI 전환
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos-container").style.display = "block";
 
-            // js-dos v6 실행 엔진 호출
+            // js-dos 엔진 초기화
             Dos(document.getElementById("dos-canvas"), {
                 wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
             }).ready((fs, main) => {
-                // 게임 파일 압축 해제 및 실행
+                // 게임 압축 파일 로드
                 fs.extract("./games/uw2.zip").then(() => {
-                    // 사운드 드라이버 실행 후 게임 실행 (순서대로)
-                    main(["fmdrv.com", "voyage2.exe"]).then(() => {
-                        console.log("Game Started");
+                    console.log("압축 해제 완료. 실행을 시도한다.");
+                    
+                    /**
+                     * 실행 명령어 조합 (중요)
+                     * 1. cd * : 압축 파일 내에 폴더가 하나 더 있어도 그 안으로 들어감
+                     * 2. FRMDRV.COM : 사운드 드라이버 로드 (사용자가 말한 대문자 철자 반영)
+                     * 3. VOYAGE2.EXE : 게임 본체 실행 (사용자가 말한 대문자 철자 반영)
+                     */
+                    main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]).then(() => {
+                        console.log("게임 실행 명령 전달 성공.");
                     });
                 });
             }).catch(err => {
-                alert("에러 발생: " + err.message);
+                console.error(err);
+                alert("시스템 오류: " + err.message);
                 location.reload();
             });
         }
