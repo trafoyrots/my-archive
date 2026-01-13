@@ -10,8 +10,8 @@
 
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .login-box { background: #111; padding: 40px; border: 2px solid #333; text-align: center; border-radius: 12px; }
-        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; font-size: 16px; }
+        .login-box { background: #111; padding: 40px; border: 2px solid #333; text-align: center; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; font-size: 16px; border-radius: 4px; }
         button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; width: 100%; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
     </style>
@@ -38,18 +38,19 @@
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // v8 방식: .then 대신 인스턴스 옵션 사용
+            // 잘 돌아가는 이름인 bundle.jsdos를 그대로 사용했다.
             Dos(document.getElementById("dos"), {
-                url: "./bundle.jsdos", // 깃허브에 올린 파일명과 일치해야 함
+                url: "./bundle.jsdos", 
                 noCloud: true,
-                autoStart: true, // 화살표 아이콘을 건너뛰기 위한 옵션
-                onChanges: (action, state) => {
-                    // 엔진 상태가 바뀌면 자동으로 동작을 지시할 수 있음
-                    console.log("Action:", action, "State:", state);
-                }
+                autoStart: true
+            }).then((runtime) => {
+                // 실행 파일이 VOYAGE2.COM인 경우를 대비해 명령어를 한 번 더 주입했다.
+                // 이미 번들 설정에서 잡혀있다면 이 줄은 무시된다.
+                runtime.dos.main(["-c", "VOYAGE2.COM"]);
+            }).catch((err) => {
+                console.error("Launch Error:", err);
             });
         }
     </script>
 </body>
 </html>
-
