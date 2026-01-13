@@ -1,22 +1,99 @@
-<script>
-    function start() {
-        if (document.getElementById("pw").value !== "1234") {
-            alert("비밀번호 오류"); return;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대항해시대 2 - 웹 아카이브</title>
+    
+    <link rel="stylesheet" href="./js-dos.css">
+    <script src="./js-dos.js"></script>
+
+    <style>
+        html, body { height: 100%; margin: 0; background: #000; color: #fff; font-family: 'Malgun Gothic', sans-serif; }
+        #dos { width: 100%; height: 100%; display: none; }
+        
+        /* 로그인 화면 스타일 */
+        .login-layer { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: radial-gradient(circle, #222 0%, #000 100%);
         }
+        .login-box {
+            background: rgba(30, 30, 30, 0.9);
+            padding: 40px;
+            border: 2px solid #3f51b5;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(63, 81, 181, 0.5);
+        }
+        h2 { margin-top: 0; letter-spacing: 5px; color: #3f51b5; }
+        input { 
+            padding: 12px; 
+            margin: 20px 0; 
+            background: #111; 
+            border: 1px solid #444; 
+            color: #fff; 
+            text-align: center; 
+            width: 200px;
+            font-size: 16px;
+        }
+        button { 
+            padding: 12px 30px; 
+            background: #3f51b5; 
+            color: #fff; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        button:hover { background: #5c6bc0; transform: scale(1.05); }
+    </style>
+</head>
+<body>
 
-        document.getElementById("login-layer").style.display = "none";
-        document.getElementById("dos").style.display = "block";
+    <div id="login-layer" class="login-layer">
+        <div class="login-box">
+            <h2>SYSTEM READY</h2>
+            <p style="color: #888; font-size: 12px;">UNCHARTED WATERS II ARCHIVE</p>
+            <input type="password" id="pw" placeholder="PASSWORD" onkeypress="if(event.keyCode==13) start()">
+            <br>
+            <button onclick="start()">INITIALIZE ENGINE</button>
+        </div>
+    </div>
 
-        // v8 엔진 옵션 최적화
-        Dos(document.getElementById("dos"), {
-            url: "./games/uw2.jsdos",
-            domObjects: {
-                // 상단 메뉴바나 클라우드 안내가 거슬린다면 여기서 조정 가능
+    <div id="dos"></div>
+
+    <script>
+        function start() {
+            const password = document.getElementById("pw").value;
+            // 비밀번호 체크
+            if (password !== "1234") {
+                alert("ACCESS DENIED: 비밀번호가 틀렸다.");
+                return;
             }
-        }).then((runtime) => {
-            console.log("게임 엔진 로드 성공!");
-        }).catch((err) => {
-            console.error("실행 에러:", err);
-        });
-    }
-</script>
+
+            // UI 전환
+            document.getElementById("login-layer").style.display = "none";
+            document.getElementById("dos").style.display = "block";
+
+            /**
+             * js-dos v8 구동 설정
+             * url: 확장자를 .jsdos로 변경한 게임 파일 경로
+             */
+            Dos(document.getElementById("dos"), {
+                url: "./games/uw2.jsdos",
+                noCloud: true, // 클라우드 저장 안내창 생략 시도
+            }).then((runtime) => {
+                console.log("Game Engine Started Successfully");
+            }).catch((err) => {
+                console.error("Engine Error:", err);
+                alert("엔진 로드 실패. 파일 경로와 라이브러리를 확인해라.");
+            });
+        }
+    </script>
+</body>
+</html>
