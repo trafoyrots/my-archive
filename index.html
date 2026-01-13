@@ -39,20 +39,19 @@
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // Cloudflare Pages에서 가장 안전한 상대 경로 호출 방식
-            var gameUrl = "uw2.zip"; 
-
+            // v8 엔진 구동 방식 (ready 대신 then 사용)
             Dos(document.getElementById("dos"), {
-                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
-            }).ready((fs, main) => {
-                // 파일을 직접 읽어온다
-                fs.extract(gameUrl).then(() => {
-                    // 내부 파일 실행 (전부 대문자)
-                    main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
-                }).catch(err => {
-                    alert("파일 로딩 실패! 아래 주소를 직접 확인해라.\nhttps://my-archive-7bj.pages.dev/uw2.zip");
-                    console.error(err);
-                });
+                url: "./uw2.zip", // 파일이 최상위에 있다고 가정
+            }).then((runtime) => {
+                console.log("엔진 로드 완료");
+                
+                // 도스 명령어 실행 (대문자 반영)
+                // v8은 기본적으로 번들을 실행하지만, 아래와 같이 수동 명령어를 보낼 수 있다.
+                runtime.dos.main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
+                
+            }).catch(err => {
+                alert("구동 실패: " + err.message);
+                console.error(err);
             });
         }
     </script>
