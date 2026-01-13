@@ -2,108 +2,61 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retro Game Archive</title>
-    
-    <link rel="stylesheet" href="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.css">
-    <script src="https://js-dos.com/v7/build/releases/latest/js-dos/js-dos.js"></script>
-
+    <link rel="stylesheet" href="https://v6p.js-dos.com/6.22/js-dos.css">
+    <script src="https://v6p.js-dos.com/6.22/js-dos.js"></script>
     <style>
-        /* 화면 깨짐 방지 및 레이아웃 강제 고정 */
-        html, body { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            background-color: #000; color: #fff; font-family: sans-serif; 
-            overflow: hidden; 
-        }
-        
-        #app-root { 
-            display: flex; justify-content: center; align-items: center; 
-            width: 100%; height: 100%; 
-        }
-
-        /* 로그인 및 로비 박스 스타일 */
-        .container { 
-            background: #1a1a1a; padding: 40px; border: 1px solid #333; 
-            border-radius: 8px; text-align: center; min-width: 320px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        input { 
-            width: 100%; padding: 12px; margin: 15px 0; 
-            background: #222; border: 1px solid #444; color: #fff; 
-            box-sizing: border-box; border-radius: 4px;
-        }
-
-        button { 
-            width: 100%; padding: 12px; background: #3f51b5; color: #fff; 
-            border: none; cursor: pointer; font-weight: bold; border-radius: 4px;
-        }
-
-        button:hover { background: #283593; }
-
-        /* 에뮬레이터 전체화면 고정 */
-        #jsdos-container { 
-            display: none; width: 100vw; height: 100vh; 
-            position: fixed; inset: 0; z-index: 9999; background: #000;
-        }
-
-        #dos-canvas { 
-            width: 100% !important; height: 100% !important; 
-        }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; color: #fff; overflow: hidden; }
+        #app { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        .box { background: #1a1a1a; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 8px; }
+        input { width: 100%; padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+        #dos-container { display: none; width: 100vw; height: 100vh; position: fixed; inset: 0; }
+        canvas { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
-    <div id="app-root">
-        <div id="login-box" class="container">
-            <h2 style="margin-top:0">SYSTEM ACCESS</h2>
+    <div id="app">
+        <div id="login-box" class="box">
+            <h2>SYSTEM ACCESS</h2>
             <input type="password" id="pw" placeholder="Password" onkeypress="if(event.keyCode==13) doLogin()">
             <button onclick="doLogin()">LOGIN</button>
         </div>
-
-        <div id="lobby" class="container" style="display:none">
-            <h2 style="margin-top:0">GAME LIST</h2>
-            <div style="padding:25px; border:1px solid #555; cursor:pointer; background: #222;" onclick="startGame('./games/uw2.zip')">
-                <strong>대항해시대 2 실행</strong>
-                <p style="font-size: 11px; color: #888; margin: 10px 0 0 0;">(games/uw2.zip)</p>
-            </div>
+        <div id="lobby" class="box" style="display:none">
+            <h2>GAME LIST</h2>
+            <button onclick="start('./games/uw2.zip')">대항해시대 2 실행</button>
         </div>
     </div>
 
-    <div id="jsdos-container">
-        <canvas id="dos-canvas"></canvas>
+    <div id="dos-container">
+        <div id="dos-canvas"></div>
     </div>
 
     <script>
         function doLogin() {
-            const pw = document.getElementById("pw").value;
-            if (pw === "1234") {
+            if (document.getElementById("pw").value === "1234") {
                 document.getElementById("login-box").style.display = "none";
                 document.getElementById("lobby").style.display = "block";
-            } else {
-                alert("비밀번호가 틀렸습니다.");
             }
         }
 
-        function startGame(relPath) {
-            // 1. 레이아웃 전환
-            document.getElementById("app-root").style.display = "none";
-            document.getElementById("jsdos-container").style.display = "block";
+        function start(relPath) {
+            document.getElementById("app").style.display = "none";
+            document.getElementById("dos-container").style.display = "block";
 
-            // 2. 경로 설정 (현재 접속 경로 기준)
             const gameUrl = new URL(relPath, window.location.href).href;
-            console.log("Loading Game Zip:", gameUrl);
 
-            // 3. 에뮬레이터 실행 (엔진 주소 명시적 고정)
+            // v6 버전 엔진으로 우회하여 magic number 에러 해결 시도
             Dos(document.getElementById("dos-canvas"), {
-                wdosboxUrl: "https://js-dos.com/v7/build/releases/latest/js-dos/wdosbox.js",
-                wasmUrl: "https://js-dos.com/v7/build/releases/latest/js-dos/wdosbox.wasm"
-            }).run(gameUrl).then(ci => {
-                console.log("Game successfully started.");
+                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
+            }).ready((fs, main) => {
+                main(["-c", "imgmount c " + gameUrl + " -t zip", "c:", "fmdrv.com", "voyage2.exe"]).then(() => {
+                    console.log("Game started");
+                });
             }).catch(err => {
-                console.error("Critical Error:", err);
-                alert("실행 중 오류가 발생했습니다.\n에러 내용: " + err.message);
-                location.reload();
+                console.error(err);
+                alert("구동 실패: " + err.message);
             });
         }
     </script>
