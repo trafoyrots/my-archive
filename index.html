@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>대항해시대 2 웹 아카이브 (v8)</title>
+    <title>대항해시대 2 웹 아카이브</title>
     
     <link rel="stylesheet" href="js-dos.css">
     <script src="js-dos.js"></script>
@@ -38,19 +38,16 @@
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            /**
-             * 에러 해결 포인트:
-             * 1. .then()을 제거했다. (v8 기본 호출 방식 준수)
-             * 2. url을 직접 전달했다.
-             */
+            // v8 방식: .then 대신 인스턴스 옵션 사용
             Dos(document.getElementById("dos"), {
-                url: "./bundle.jsdos", // Studio에서 만든 확장자로 변경했다면 이대로 뒀다.
+                url: "./uw2.jsdos", // 깃허브에 올린 파일명과 일치해야 함
                 noCloud: true,
-                autostart: true // 자동 실행 옵션 추가
+                autoStart: true, // 화살표 아이콘을 건너뛰기 위한 옵션
+                onChanges: (action, state) => {
+                    // 엔진 상태가 바뀌면 자동으로 동작을 지시할 수 있음
+                    console.log("Action:", action, "State:", state);
+                }
             });
-            
-            // 만약 .jsdos 파일 안에 실행 정보가 있다면 아래 명령어는 없어도 된다.
-            // 하지만 수동 실행이 필요하다면 별도의 지연 실행이 필요할 수 있다.
         }
     </script>
 </body>
