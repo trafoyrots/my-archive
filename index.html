@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>´ëÇ×ÇØ½Ã´ë 2 ¾ÆÄ«ÀÌºê</title>
+    <title>ëŒ€í•­í•´ì‹œëŒ€ 2 ì•„ì¹´ì´ë¸Œ</title>
     
     <link rel="stylesheet" href="js-dos.css">
     <script src="js-dos.js"></script>
 
     <style>
-        /* ±âº» Å×¸¶ ¹× ¹è°æ */
+        /* ê¸°ë³¸ í…Œë§ˆ ë° ë°°ê²½ */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a0a0a; color: #e0e0e0; font-family: 'Malgun Gothic', sans-serif; overflow: hidden; }
         
-        /* ¼Ò°³ ÆäÀÌÁö ·¹ÀÌ¾Æ¿ô */
+        /* ì†Œê°œ í˜ì´ì§€ ë ˆì´ì•„ì›ƒ */
         .intro-container {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100vh; text-align: center; background: radial-gradient(circle, #1a237e 0%, #000 80%);
@@ -23,7 +23,7 @@
         h1 { font-size: 3rem; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(63, 81, 181, 0.8); }
         p { font-size: 1.1rem; line-height: 1.6; color: #bbb; margin-bottom: 30px; }
         
-        /* ¼¼·ÃµÈ ½ÇÇà ¹öÆ° */
+        /* ì„¸ë ¨ëœ ì‹¤í–‰ ë²„íŠ¼ */
         .start-btn {
             padding: 15px 50px; font-size: 1.2rem; font-weight: bold; color: #fff;
             background: #3f51b5; border: none; border-radius: 30px; cursor: pointer;
@@ -31,7 +31,7 @@
         }
         .start-btn:hover { background: #5c6bc0; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(63, 81, 181, 0.5); }
         
-        /* °ÔÀÓ È­¸é ¿µ¿ª */
+        /* ê²Œì„ í™”ë©´ ì˜ì—­ */
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -41,12 +41,12 @@
 
     <div id="intro-layer" class="intro-container">
         <div class="intro-content">
-            <h1>´ëÇ×ÇØ½Ã´ë II</h1>
+            <h1>ëŒ€í•­í•´ì‹œëŒ€ II</h1>
             <p>
-                16¼¼±â ´ëÇ×ÇØ½Ã´ë¸¦ ¹è°æÀ¸·Î ÆîÃÄÁö´Â 6¸íÀÇ ÁÖÀÎ°øµéÀÇ ÀÌ¾ß±â.<br>
-                ±³¿ª, Å½Çè, ±×¸®°í ÇØÀüÀ» ÅëÇØ Àü ¼¼°èÀÇ ¹Ù´Ù¸¦ Á¤º¹ÇØ º¸¼¼¿ä.
+                16ì„¸ê¸° ëŒ€í•­í•´ì‹œëŒ€ë¥¼ ë°°ê²½ìœ¼ë¡œ í¼ì³ì§€ëŠ” 6ëª…ì˜ ì£¼ì¸ê³µë“¤ì˜ ì´ì•¼ê¸°.<br>
+                êµì—­, íƒí—˜, ê·¸ë¦¬ê³  í•´ì „ì„ í†µí•´ ì „ ì„¸ê³„ì˜ ë°”ë‹¤ë¥¼ ì •ë³µí•´ ë³´ì„¸ìš”.
             </p>
-            <button class="start-btn" onclick="launchGame()">Ç×ÇØ ½ÃÀÛ</button>
+            <button class="start-btn" onclick="launchGame()">í•­í•´ ì‹œì‘</button>
         </div>
     </div>
 
@@ -54,24 +54,25 @@
 
     <script>
         function launchGame() {
-            // ·¹ÀÌ¾î ÀüÈ¯
+            // ë ˆì´ì–´ ì „í™˜
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // °ÔÀÓ ½ÇÇà (¼Óµµ ÃÖÀûÈ­ 8000 »çÀÌÅ¬ Àû¿ë)
+            // ê²Œì„ ì‹¤í–‰ (ì†ë„ ìµœì í™” 8000 ì‚¬ì´í´ ì ìš©)
             Dos(document.getElementById("dos"), {
-                url: "./bundle.jsdos",
+                url: "./nuasuw2.dat",
                 noCloud: true,
                 autoStart: true
             }).then((runtime) => {
-                // °ÔÀÓ ½ÇÇà ½Ã ÀûÁ¤ ¼Óµµ·Î °íÁ¤ (³Ê¹« ºü¸£¸é Ç×ÇØ°¡ ºÒ°¡´ÉÇÔ)
+                // ê²Œì„ ì‹¤í–‰ ì‹œ ì ì • ì†ë„ë¡œ ê³ ì • (ë„ˆë¬´ ë¹ ë¥´ë©´ í•­í•´ê°€ ë¶ˆê°€ëŠ¥í•¨)
                 runtime.dos.main(["-c", "config -set cpu cycles=8000", "-c", "VOYAGE2.COM"]);
             }).catch((err) => {
-                alert("°ÔÀÓ ·Îµå ½ÇÆĞ: " + err.message);
+                alert("ê²Œì„ ë¡œë“œ ì‹¤íŒ¨: " + err.message);
                 location.reload();
             });
         }
     </script>
 </body>
 </html>
+
 
