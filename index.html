@@ -3,38 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <title>대항해시대 2 - 웹 아카이브</title>
-    <link rel="stylesheet" href="https://v6p.js-dos.com/6.22/js-dos.css">
-    <script src="https://v6p.js-dos.com/6.22/js-dos.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/js-dos/mg-archive/static/6.22/js-dos.css">
+    <script src="https://cdn.jsdelivr.net/gh/js-dos/mg-archive/static/6.22/js-dos.js"></script>
+
     <style>
-        body { margin: 0; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .login-box { background: #111; padding: 40px; border: 1px solid #333; text-align: center; }
-        #dos { width: 100vw; height: 100vh; display: none; }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .login-box { background: #111; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 10px; }
+        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 200px; }
+        button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; }
     </style>
 </head>
 <body>
+
     <div id="ui-layer">
         <div class="login-box">
             <h2>SYSTEM READY</h2>
-            <input type="password" id="pw" placeholder="PASSWORD">
-            <button onclick="launch()">실행</button>
+            <input type="password" id="pw" placeholder="PASSWORD" onkeypress="if(event.keyCode==13) launch()">
+            <br>
+            <button onclick="launch()">INITIALIZE</button>
         </div>
     </div>
+
     <div id="dos"></div>
 
     <script>
         function launch() {
-            if (document.getElementById("pw").value !== "1234") return;
+            if (document.getElementById("pw").value !== "1234") {
+                alert("비밀번호 오류"); return;
+            }
+
+            // 라이브러리 로드 확인
+            if (typeof Dos === "undefined") {
+                alert("엔진 로드 실패! 인터넷 연결이나 주소를 확인해라.");
+                return;
+            }
+
             document.getElementById("ui-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
+            // wdosboxUrl도 안정적인 JSDelivr 주소로 설정
             Dos(document.getElementById("dos"), {
-                wdosboxUrl: "https://v6p.js-dos.com/6.22/wdosbox.js"
+                wdosboxUrl: "https://cdn.jsdelivr.net/gh/js-dos/mg-archive/static/6.22/wdosbox.js"
             }).ready((fs, main) => {
-                // .jsdos가 아닌 원래의 .zip 파일을 사용했다.
                 fs.extract("./games/uw2.zip").then(() => {
-                    // cd * 명령어로 폴더 안으로 자동 진입 후 대문자 실행
+                    // 폴더 자동 진입 후 대문자 실행 파일 구동
                     main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.EXE"]);
                 });
+            }).catch(err => {
+                alert("구동 실패: " + err.message);
             });
         }
     </script>
