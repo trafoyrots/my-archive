@@ -1,34 +1,54 @@
 <!DOCTYPE html>
-<html lang="kor">
+<html lang="ko">
 <head>
-
-<title>삼국지3</title>
-
-<style>
-html, body {
-height: 100%;
-}
-
-#dos {
-width: 100%;
-height: 100%;
-}
-</style>
-
-<!-- js-dos style sheet -->
-<link rel="stylesheet" href="https://my-archive-7bj.pages.dev/js-dos.css">
-
-<!-- js-dos -->
-<script src="https://my-archive-7bj.pages.dev/"></script>
+    <meta charset="UTF-8">
+    <title>대항해시대 2 웹 아카이브</title>
+    <link rel="stylesheet" href="js-dos.css">
+    <script src="js-dos.js"></script>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .login-box { background: #111; padding: 40px; border: 1px solid #333; text-align: center; border-radius: 10px; }
+        input { padding: 12px; margin: 15px 0; background: #222; border: 1px solid #444; color: #fff; text-align: center; width: 220px; }
+        button { padding: 12px 30px; background: #3f51b5; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 100%; }
+        #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; }
+    </style>
 </head>
 <body>
 
-<div id="dos" style="width: 100%; height: 100%"></div>
+    <div id="ui-layer">
+        <div class="login-box">
+            <h2>SYSTEM READY</h2>
+            <input type="password" id="pw" placeholder="PASSWORD" onkeypress="if(event.keyCode==13) launch()">
+            <br>
+            <button onclick="launch()">GAME START</button>
+        </div>
+    </div>
 
-<script>
-Dos(document.getElementById("dos"), {
-url: "https://my-archive-7bj.pages.dev/bundle.zip,
-})
-</script>
+    <div id="dos"></div>
+
+    <script>
+        function launch() {
+            if (document.getElementById("pw").value !== "1234") {
+                alert("비밀번호 오류"); return;
+            }
+
+            document.getElementById("ui-layer").style.display = "none";
+            document.getElementById("dos").style.display = "block";
+
+            // v6 표준 문법 (.ready)
+            Dos(document.getElementById("dos"), {
+                // 이 주소는 v6 전용 엔진 파일이다.
+                wdosboxUrl: "https://my-archive-7bj.pages.dev/js-dos.js"
+            }).ready(function (fs, main) {
+                // 파일이 최상위에 있어야 한다.
+                fs.extract("bundle2.zip").then(function () {
+                    // 실행 명령어 주입
+                    main(["-c", "cd *", "-c", "FRMDRV.COM", "-c", "VOYAGE2.COM"]);
+                }).catch(function (err) {
+                    alert("파일 압축 해제 실패: " + err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
