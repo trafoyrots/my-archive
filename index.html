@@ -9,7 +9,6 @@
     <script src="js-dos.js"></script>
 
     <style>
-        /* 기본 레이아웃: 모바일에서 가려짐 방지 */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; }
         
         .intro-container {
@@ -37,7 +36,6 @@
         }
         .start-btn:hover { background: #b71c1c; transform: translateY(-2px); }
 
-        /* 관리자 전용 정보창 */
         #admin-panel { 
             margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; 
             font-size: 0.9rem; color: #1d39c4; display: none; text-align: left;
@@ -45,7 +43,6 @@
         .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
         .stat-val { font-weight: bold; color: #b71c1c; }
 
-        /* 저작권 문구: 버튼을 가리지 않게 아래로 배치 */
         .copyright-section {
             margin-top: auto; padding: 20px 0; font-size: 0.8rem; color: #888; line-height: 1.5;
         }
@@ -82,7 +79,7 @@
     <div id="dos"></div>
 
     <script>
-        const API_NAMESPACE = "eiketsu_2026_final_v4"; // 새 장부 개설
+        const API_NAMESPACE = "eiketsu_2026_final_v4"; 
         const ENCODED_PW = "YWRtaW43Nzc=";
 
         function checkAccess() {
@@ -96,13 +93,13 @@
 
             const password = prompt("접속 암호를 입력하세요.");
             if (password === "2026") {
-                // 일반 접속 시 방문자 카운트 증가
+            
                 recordMetric("visit_count");
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "false");
                 showPage(false);
             } else if (btoa(password) === ENCODED_PW) { 
-                // 관리자 접속 시 방문자 카운트 증가
+            
                 recordMetric("visit_count");
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "true");
@@ -121,7 +118,7 @@
             }
         }
 
-        // 지표 기록 함수
+        
         function recordMetric(metric) {
             fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/${metric}/up`).catch(() => {});
         }
@@ -144,24 +141,24 @@
         }
 
         async function launchGame() {
-            // 실행 횟수 기록
+
             recordMetric("play_count");
 
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // js-dos 실행
+
             Dos(document.getElementById("dos"), {
                 url: "./nuasuw2.dat",
                 noCloud: true,
                 autoStart: true
             }).then((ci) => {
-                // 세이브 데이터 연결
+
                 if (ci && typeof ci.persist === "function") {
                     ci.persist("eiketsu-save-data");
                 }
                 
-                // 실행 및 속도 설정
+
                 ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
             });
         }
