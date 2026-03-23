@@ -9,46 +9,32 @@
     <script src="js-dos.js"></script>
 
     <style>
-        /* 밝고 세련된 느낌의 테마 */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; overflow: hidden; }
-        
         .intro-container {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; text-align: center; 
-            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
         }
-        
         .intro-content { 
-            max-width: 700px; padding: 40px; border-radius: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            animation: fadeIn 1s ease-out; 
+            max-width: 700px; padding: 40px; border-radius: 20px; background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); animation: fadeIn 1s ease-out; 
         }
-
         .game-img { width: 100%; max-width: 500px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-
         h1 { font-size: 2.5rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
-        
         .start-btn {
             padding: 15px 60px; font-size: 1.2rem; font-weight: bold; color: #fff;
             background: #2c3e50; border: none; border-radius: 5px; cursor: pointer;
             transition: all 0.3s ease; margin-top: 10px;
         }
         .start-btn:hover { background: #b71c1c; transform: translateY(-2px); }
-
-        /* 관리자 전용 정보창 */
         #admin-panel { 
             margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 5px; 
             font-size: 0.95rem; color: #1d39c4; display: none; 
         }
-
-        /* 저작권 문구 정렬 */
         .copyright-section {
             position: absolute; bottom: 20px; width: 100%; text-align: center;
             font-size: 0.85rem; color: #888; line-height: 1.5;
         }
         .copyright-section hr { width: 50px; border: 0; border-top: 1px solid #ccc; margin: 10px auto; }
-
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -65,7 +51,7 @@
 
             <div id="admin-panel">
                 <strong>📊 관리자 통계 모드</strong><br>
-                실시간 누적 게임 실행: <span id="play-count">0</span>회
+                실시간 누적 실행: <span id="play-count">0</span>회
             </div>
         </div>
 
@@ -79,8 +65,8 @@
     <div id="dos"></div>
 
     <script>
-        const API_NAMESPACE = "eiketsu_v1"; 
-        const ENCODED_PW = "YWRtaW43Nzc="; // 'admin777'
+        const API_NAMESPACE = "eiketsu_2026_final_v1"; 
+        const ENCODED_PW = "YWRtaW43Nzc=";
 
         function checkAccess() {
             const isPassed = sessionStorage.getItem("is_passed");
@@ -127,25 +113,23 @@
 
         async function launchGame() {
             fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count/up`).catch(() => {});
-        
+
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
-        
+
             try {
-                Dos(document.getElementById("dos"))
-                    .run("./nuasuw2.dat")
-                    .then(async (ci) => {
-                        console.log("게임 로딩 성공!");
-                        if (ci.persist) {
-                            await ci.persist("eiketsu-save-data");
-                            console.log("세이브 시스템이 활성화되었습니다.");
-                        }
-                    });
-        
-            } catch (err) {
-                console.error("실행 오류:", err);
-                alert("게임 실행에 실패했습니다. 파일 경로를 확인해 주세요.");
-                location.reload();
+                const ci = await Dos(document.getElementById("dos")).run("./nuasuw2.dat");
+                
+                if (ci && typeof ci.persist === "function") {
+                    await ci.persist("eiketsu-save-data");
+                    console.log("Persistence initialized.");
+                }
+
+                ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
+
+            } catch (e) {
+                console.error("Launch error:", e);
+                alert("게임을 실행하는 중 오류가 발생했습니다.");
             }
         }
     </script>
