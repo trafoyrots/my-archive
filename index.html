@@ -51,7 +51,7 @@
 
             <div id="admin-panel">
                 <strong>📊 관리자 통계 모드</strong><br>
-                실시간 누적 실행: <span id="play-count">0</span>회
+                실시간 누적 실행: <span id="play-count">...</span>회
             </div>
         </div>
 
@@ -65,7 +65,7 @@
     <div id="dos"></div>
 
     <script>
-        const API_NAMESPACE = "eiketsu_2026_final_v1"; 
+        const API_NAMESPACE = "eiketsu_2026_final_v2"; 
         const ENCODED_PW = "YWRtaW43Nzc=";
 
         function checkAccess() {
@@ -101,42 +101,39 @@
         }
 
         async function fetchStats() {
+            const display = document.getElementById("play-count");
             try {
                 const response = await fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`);
-                if (response.status === 404) return;
+                
+                if (response.status === 404) {
+                    display.innerText = "0";
+                    return;
+                }
+
                 const data = await response.json();
-                document.getElementById("play-count").innerText = data.count || 0;
+                display.innerText = data.count || 0;
             } catch (err) {
-                document.getElementById("play-count").innerText = "-";
+                display.innerText = "0"; 
+                console.error(err);
             }
         }
         
         async function launchGame() {
-            // 1. 실행 횟수 통계 전송 (기존 기능 보관)
             fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count/up`).catch(() => {});
         
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
         
-            // 2. wan2land의 대항해시대2 방식 반영: Dos(요소, 옵션).then(...)
             Dos(document.getElementById("dos"), {
                 url: "./nuasuw2.dat",
                 noCloud: true,
                 autoStart: true
             }).then((ci) => {
-                console.log("게임 엔진 로드 완료!");
-        
-                // 3. 세이브 기능 연결 (가장 안전한 방식)
                 if (ci && typeof ci.persist === "function") {
-                    // eiketsu-save-data라는 이름으로 브라우저에 저장소를 만듭니다.
                     ci.persist("eiketsu-save-data");
-                    console.log("세이브 시스템 활성화 완료");
                 }
-        
-                // 4. 실행 명령어 적용 (cycles 조절 및 HERO.COM 실행)
-                // 내부 설정이 이미 있다면 이 명령어가 보조하여 속도를 맞춰줍니다.
+
                 ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
-        
             });
         }
     </script>
