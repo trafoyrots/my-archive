@@ -127,21 +127,25 @@
 
         async function launchGame() {
             fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count/up`).catch(() => {});
+        
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
+        
             try {
-                const instance = await Dos(document.getElementById("dos"));
-                const ci = await instance.run("./nuasuw2.dat");
-                if (typeof ci.persist === "function") {
-                    await ci.persist("eiketsu-save-data");
-                    console.log("세이브 시스템 연결 성공!");
-                } else {
-                    console.error("이 버전의 js-dos는 persist를 지원하지 않습니다.");
-                }
-                ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
+                Dos(document.getElementById("dos"))
+                    .run("./nuasuw2.dat")
+                    .then(async (ci) => {
+                        console.log("게임 로딩 성공!");
+                        if (ci.persist) {
+                            await ci.persist("eiketsu-save-data");
+                            console.log("세이브 시스템이 활성화되었습니다.");
+                        }
+                    });
+        
             } catch (err) {
-                console.error("게임 실행 중 오류:", err);
-                alert("게임 실행 실패: " + err.message);
+                console.error("실행 오류:", err);
+                alert("게임 실행에 실패했습니다. 파일 경로를 확인해 주세요.");
+                location.reload();
             }
         }
     </script>
