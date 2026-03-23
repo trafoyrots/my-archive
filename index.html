@@ -9,66 +9,118 @@
     <script src="js-dos.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #0a0a0a; color: #e0e0e0; font-family: 'Malgun Gothic', sans-serif; overflow: hidden; }
+        /* 밝고 깔끔한 테마로 변경 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; overflow: hidden; }
+        
         .intro-container {
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; text-align: center; background: radial-gradient(circle, #4a1414 0%, #000 80%);
+            height: 100vh; text-align: center; 
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
         }
-        .intro-content { max-width: 600px; padding: 20px; animation: fadeIn 1.5s ease-out; }
-        h1 { font-size: 3rem; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(183, 28, 28, 0.8); }
-        p { font-size: 1.1rem; line-height: 1.6; color: #bbb; margin-bottom: 30px; }
+        
+        .intro-content { 
+            max-width: 700px; padding: 40px; border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 1s ease-out; 
+        }
+
+        /* 이미지 스타일 */
+        .game-img { width: 100%; max-width: 500px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        h1 { font-size: 2.5rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
+        
         .start-btn {
-            padding: 15px 50px; font-size: 1.2rem; font-weight: bold; color: #fff;
-            background: #b71c1c; border: none; border-radius: 30px; cursor: pointer;
-            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            padding: 15px 60px; font-size: 1.2rem; font-weight: bold; color: #fff;
+            background: #2c3e50; border: none; border-radius: 5px; cursor: pointer;
+            transition: all 0.3s ease; margin-top: 10px;
         }
-        .start-btn:hover { background: #d32f2f; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(183, 28, 28, 0.5); }
+        .start-btn:hover { background: #b71c1c; transform: translateY(-2px); }
+
+        /* 관리자 정보창 */
+        #admin-panel { 
+            margin-top: 20px; padding: 10px; background: #eee; border-radius: 5px; 
+            font-size: 0.9rem; color: #666; display: none; 
+        }
+
+        /* 저작권 문구 하단 정렬 */
+        .copyright-section {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            font-size: 0.85rem; color: #888; line-height: 1.5;
+        }
+        .copyright-section hr { width: 50px; border: 0; border-top: 1px solid #ccc; margin: 10px auto; }
+
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body onload="checkAccess()">
 
     <div id="intro-layer" class="intro-container" style="display: none;">
         <div class="intro-content">
+            <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
             <h1>삼국지 영걸전</h1>
-            <p>
-                This project is a non-profit fan-made archive.<br>
-                All rights and copyrights for the original game belong to KOEI.<br>
-                No copyright infringement is intended.<br>
-                Will be removed immediately upon request by the copyright holder.<br>
-                모든 권리는 KOEI에 있으며 저작권을 침해하려는 의도는 없습니다.<br>
-                저작권자의 요청이 있을 경우 즉시 삭제하겠습니다.
-            </p>
-            <button class="start-btn" onclick="launchGame()">전장으로 출진</button>
+            <p>90년대 전략 시뮬레이션의 전설, 영걸전 아카이브에 오신 것을 환영합니다.</p>
+            
+            <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
+
+            <div id="admin-panel">
+                <strong>[관리자 모드]</strong><br>
+                오늘의 누적 실행 횟수: <span id="play-count">0</span>회
+            </div>
+        </div>
+
+        <div class="copyright-section">
+            <hr>
+            This project is a non-profit fan-made archive. All rights for the original game belong to KOEI.<br>
+            모든 권리는 KOEI에 있으며, 저작권자의 요청이 있을 경우 즉시 삭제하겠습니다.
         </div>
     </div>
 
     <div id="dos"></div>
 
     <script>
-        // 접속 시 암호 확인 (2026)
+        let isAdmin = false;
+
         function checkAccess() {
             const password = prompt("접속 암호를 입력하세요.");
+            
             if (password === "2026") {
-                document.getElementById("intro-layer").style.display = "flex";
+                // 일반 접속
+                showPage(false);
+            } else if (password === "admin777") { // 관리자 암호 예시
+                // 관리자 접속
+                isAdmin = true;
+                showPage(true);
             } else {
                 alert("암호가 틀렸습니다.");
                 location.reload();
             }
         }
 
+        function showPage(adminMode) {
+            document.getElementById("intro-layer").style.display = "flex";
+            if (adminMode) {
+                document.getElementById("admin-panel").style.display = "block";
+                // 로컬 스토리지에서 카운트 가져오기 (실제 서버 구축 전 임시 카운터)
+                const count = localStorage.getItem("play_count") || 0;
+                document.getElementById("play-count").innerText = count;
+            }
+        }
+
         function launchGame() {
+            // 카운트 증가 (관리자가 확인할 수 있도록 기록)
+            let currentCount = parseInt(localStorage.getItem("play_count") || 0);
+            localStorage.setItem("play_count", currentCount + 1);
+
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            // 파일 이름은 그대로 유지함
             Dos(document.getElementById("dos"), {
                 url: "./nuasuw2.dat",
                 noCloud: true,
                 autoStart: true
             }).then((runtime) => {
-                // 삼국지 영걸전 실행 명령어 (보통 EKD.COM)
                 runtime.dos.main(["-c", "config -set cpu cycles=15000", "-c", "EKD.COM"]);
             }).catch((err) => {
                 alert("게임 로드 실패: " + err.message);
