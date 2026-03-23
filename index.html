@@ -2,45 +2,56 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>삼국지 영걸전 아카이브</title>
     
     <link rel="stylesheet" href="js-dos.css">
     <script src="js-dos.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; overflow: hidden; }
+        /* 기본 레이아웃: 모바일에서 가려짐 방지 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; }
+        
         .intro-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            min-height: 100vh; text-align: center; 
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            overflow-y: auto; padding: 30px 20px; box-sizing: border-box;
         }
+        
         .intro-content { 
-            max-width: 700px; padding: 40px; border-radius: 20px; background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); animation: fadeIn 1s ease-out; 
+            width: 100%; max-width: 600px; padding: 30px 20px; border-radius: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 1s ease-out; margin-bottom: 30px;
         }
-        .game-img { width: 100%; max-width: 500px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        h1 { font-size: 2.5rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
+
+        .game-img { width: 100%; max-width: 400px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        h1 { font-size: 2rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
+        
         .start-btn {
-            padding: 15px 60px; font-size: 1.2rem; font-weight: bold; color: #fff;
+            padding: 15px 40px; font-size: 1.1rem; font-weight: bold; color: #fff;
             background: #2c3e50; border: none; border-radius: 5px; cursor: pointer;
-            transition: all 0.3s ease; margin-top: 10px;
+            transition: all 0.3s ease; width: 100%; max-width: 300px;
         }
         .start-btn:hover { background: #b71c1c; transform: translateY(-2px); }
-        
-        /* 관리자 패널 디자인 개선 */
+
+        /* 관리자 전용 정보창 */
         #admin-panel { 
             margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; 
             font-size: 0.9rem; color: #1d39c4; display: none; text-align: left;
         }
-        .stat-item { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dashed #adc6ff; padding-bottom: 3px; }
-        .stat-value { font-weight: bold; color: #b71c1c; }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .stat-val { font-weight: bold; color: #b71c1c; }
 
+        /* 저작권 문구: 버튼을 가리지 않게 아래로 배치 */
         .copyright-section {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
-            font-size: 0.85rem; color: #888; line-height: 1.5;
+            margin-top: auto; padding: 20px 0; font-size: 0.8rem; color: #888; line-height: 1.5;
         }
-        .copyright-section hr { width: 50px; border: 0; border-top: 1px solid #ccc; margin: 10px auto; }
-        #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; }
+        .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 10px auto; }
+
+        #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; z-index: 100; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -50,34 +61,28 @@
         <div class="intro-content">
             <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
             <h1>삼국지 영걸전</h1>
-            <p>비영리 목적으로 운영되는 팬 메이드 아카이브 페이지입니다.</p>
+            <p>비영리 목적으로 운영되는 팬 메이드 아카이브입니다.</p>
             
             <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
 
             <div id="admin-panel">
-                <div style="text-align: center; font-weight: bold; margin-bottom: 10px;">📊 실시간 관리자 통계</div>
-                <div class="stat-item">
-                    <span>전체 방문자 수</span>
-                    <span class="stat-value"><span id="visit-count">0</span>회</span>
-                </div>
-                <div class="stat-item" style="border: none;">
-                    <span>게임 실행 횟수</span>
-                    <span class="stat-value"><span id="play-count">0</span>회</span>
-                </div>
+                <div style="text-align:center; font-weight:bold; margin-bottom:10px;">📊 관리자 통계</div>
+                <div class="stat-line"><span>누적 방문자 수</span><span class="stat-val" id="visit-count">0</span></div>
+                <div class="stat-line"><span>게임 실행 횟수</span><span class="stat-val" id="play-count">0</span></div>
             </div>
         </div>
 
         <div class="copyright-section">
             <hr>
-            This project is a non-profit fan-made archive. All rights for the original game belong to KOEI.<br>
-            모든 권리는 KOEI에 있으며, 저작권자의 요청이 있을 경우 즉시 삭제하겠습니다.
+            This project is a non-profit fan-made archive.<br>
+            All rights for the original game belong to KOEI.
         </div>
     </div>
 
     <div id="dos"></div>
 
     <script>
-        const API_NAMESPACE = "eiketsu_2026_final_v3"; 
+        const API_NAMESPACE = "eiketsu_2026_final_v4"; // 새 장부 개설
         const ENCODED_PW = "YWRtaW43Nzc=";
 
         function checkAccess() {
@@ -91,12 +96,14 @@
 
             const password = prompt("접속 암호를 입력하세요.");
             if (password === "2026") {
-                fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count/up`).catch(() => {});
+                // 일반 접속 시 방문자 카운트 증가
+                recordMetric("visit_count");
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "false");
                 showPage(false);
             } else if (btoa(password) === ENCODED_PW) { 
-                fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count/up`).catch(() => {});
+                // 관리자 접속 시 방문자 카운트 증가
+                recordMetric("visit_count");
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "true");
                 showPage(true);
@@ -114,43 +121,47 @@
             }
         }
 
+        // 지표 기록 함수
+        function recordMetric(metric) {
+            fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/${metric}/up`).catch(() => {});
+        }
+
         async function fetchStats() {
-            const vDisplay = document.getElementById("visit-count");
-            const pDisplay = document.getElementById("play-count");
-            
             try {
                 const [vRes, pRes] = await Promise.all([
                     fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count`),
                     fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`)
                 ]);
+                
+                const vData = await vRes.json();
+                const pData = await pRes.json();
 
-                if (vRes.ok) {
-                    const vData = await vRes.json();
-                    vDisplay.innerText = vData.count || 0;
-                }
-                if (pRes.ok) {
-                    const pData = await pRes.json();
-                    pDisplay.innerText = pData.count || 0;
-                }
+                document.getElementById("visit-count").innerText = vData.count || 0;
+                document.getElementById("play-count").innerText = pData.count || 0;
             } catch (err) {
-                console.error("통계 로드 실패");
+                console.error("Stats error");
             }
         }
-        
+
         async function launchGame() {
-            fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count/up`).catch(() => {});
-        
+            // 실행 횟수 기록
+            recordMetric("play_count");
+
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
-        
+
+            // js-dos 실행
             Dos(document.getElementById("dos"), {
                 url: "./nuasuw2.dat",
                 noCloud: true,
                 autoStart: true
             }).then((ci) => {
+                // 세이브 데이터 연결
                 if (ci && typeof ci.persist === "function") {
                     ci.persist("eiketsu-save-data");
                 }
+                
+                // 실행 및 속도 설정
                 ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
             });
         }
