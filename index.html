@@ -126,33 +126,19 @@
         }
 
         async function launchGame() {
-            // 1. 실행 횟수 통계 전송
             fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count/up`).catch(() => {});
-        
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
-        
             try {
-                // 2. [단계 1] 엔진 초기화 (Dos 함수에 옵션을 넣지 않고 엔진만 먼저 부릅니다)
                 const instance = await Dos(document.getElementById("dos"));
-        
-                // 3. [단계 2] 게임 실행 및 인터페이스(ci) 가져오기
-                // 여기서 .run()을 써야 persist 기능이 포함된 ci 객체가 정확히 반환됩니다.
                 const ci = await instance.run("./nuasuw2.dat");
-        
-                // 4. 세이브 데이터 보존 설정 (이름은 원하시는 대로 유지)
                 if (typeof ci.persist === "function") {
                     await ci.persist("eiketsu-save-data");
                     console.log("세이브 시스템 연결 성공!");
                 } else {
                     console.error("이 버전의 js-dos는 persist를 지원하지 않습니다.");
                 }
-        
-                // 5. 게임 실행 (사용자님이 말씀하신 HERO.COM 적용)
-                // 이미 내부 config에서 실행된다면 이 줄은 없어도 되지만, 
-                // 속도 조절(cycles)을 위해 남겨두신다면 파일명만 맞춰서 쓰시면 됩니다.
                 ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
-        
             } catch (err) {
                 console.error("게임 실행 중 오류:", err);
                 alert("게임 실행 실패: " + err.message);
