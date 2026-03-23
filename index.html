@@ -110,27 +110,34 @@
                 document.getElementById("play-count").innerText = "-";
             }
         }
-
+        
         async function launchGame() {
+            // 1. 실행 횟수 통계 전송 (기존 기능 보관)
             fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count/up`).catch(() => {});
-
+        
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
-
-            try {
-                const ci = await Dos(document.getElementById("dos")).run("./nuasuw2.dat");
-                
+        
+            // 2. wan2land의 대항해시대2 방식 반영: Dos(요소, 옵션).then(...)
+            Dos(document.getElementById("dos"), {
+                url: "./nuasuw2.dat",
+                noCloud: true,
+                autoStart: true
+            }).then((ci) => {
+                console.log("게임 엔진 로드 완료!");
+        
+                // 3. 세이브 기능 연결 (가장 안전한 방식)
                 if (ci && typeof ci.persist === "function") {
-                    await ci.persist("eiketsu-save-data");
-                    console.log("Persistence initialized.");
+                    // eiketsu-save-data라는 이름으로 브라우저에 저장소를 만듭니다.
+                    ci.persist("eiketsu-save-data");
+                    console.log("세이브 시스템 활성화 완료");
                 }
-
+        
+                // 4. 실행 명령어 적용 (cycles 조절 및 HERO.COM 실행)
+                // 내부 설정이 이미 있다면 이 명령어가 보조하여 속도를 맞춰줍니다.
                 ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
-
-            } catch (e) {
-                console.error("Launch error:", e);
-                alert("게임을 실행하는 중 오류가 발생했습니다.");
-            }
+        
+            });
         }
     </script>
 </body>
