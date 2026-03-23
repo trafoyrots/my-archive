@@ -18,7 +18,6 @@
             max-width: 700px; padding: 40px; border-radius: 20px; background: rgba(255, 255, 255, 0.9);
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); animation: fadeIn 1s ease-out; 
         }
-        /* 원래 이미지 파일 사용 */
         .game-img { width: 100%; max-width: 500px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         h1 { font-size: 2.5rem; color: #2c3e50; margin-bottom: 15px; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
         .start-btn {
@@ -27,12 +26,10 @@
             transition: all 0.3s ease; margin-top: 10px;
         }
         .start-btn:hover { background: #b71c1c; transform: translateY(-2px); }
-        
         #admin-panel { 
             margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 5px; 
             font-size: 0.95rem; color: #1d39c4; display: none; 
         }
-        
         .copyright-section {
             position: absolute; bottom: 20px; width: 100%; text-align: center;
             font-size: 0.85rem; color: #888; line-height: 1.5;
@@ -53,7 +50,7 @@
             <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
 
             <div id="admin-panel">
-                <strong>📊 관리자 통계 모드</strong><br>
+                <strong>📊 관리자 통계 정보</strong><br>
                 실시간 누적 실행: <span id="play-count">0</span>회
             </div>
         </div>
@@ -68,14 +65,24 @@
     <div id="dos"></div>
 
     <script>
-        const API_NAMESPACE = "eiketsu_archive_final_2026"; 
-        const ENCODED_PW = "YWRtaW43Nzc=";
+        const API_NAMESPACE = "eiketsu_service"; 
+        const ENCODED_PW = "YWRtaW43Nzc="; // 'admin777'
 
         function checkAccess() {
+            const isPassed = sessionStorage.getItem("is_passed");
+            if (isPassed === "true") {
+                showPage(sessionStorage.getItem("isAdmin") === "true");
+                return;
+            }
+
             const password = prompt("접속 암호를 입력하세요.");
             if (password === "2026") {
+                sessionStorage.setItem("is_passed", "true");
+                sessionStorage.setItem("isAdmin", "false");
                 showPage(false);
             } else if (btoa(password) === ENCODED_PW) { 
+                sessionStorage.setItem("is_passed", "true");
+                sessionStorage.setItem("isAdmin", "true");
                 showPage(true);
             } else {
                 alert("암호가 틀렸습니다.");
@@ -92,19 +99,16 @@
         }
 
         async function fetchStats() {
-            const display = document.getElementById("play-count");
             try {
                 const response = await fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`);
-                
                 if (response.status === 404) {
-                    display.innerText = "0";
+                    document.getElementById("play-count").innerText = "0";
                     return;
                 }
-
                 const data = await response.json();
-                display.innerText = data.count || 0;
+                document.getElementById("play-count").innerText = data.count || 0;
             } catch (err) {
-                display.innerText = "연결 대기 중";
+                document.getElementById("play-count").innerText = "연결 대기 중";
             }
         }
 
@@ -114,16 +118,15 @@
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            Dos(document.getElementById("dos"), {
+            const ci = await Dos(document.getElementById("dos"), {
                 url: "./nuasuw2.dat",
                 noCloud: true,
                 autoStart: true
-            }).then((runtime) => {
-                runtime.dos.main(["-c", "config -set cpu cycles=15000", "-c", "EKD.COM"]);
-            }).catch((err) => {
-                alert("게임 로드 실패: " + err.message);
-                location.reload();
             });
+            
+            await ci.persist("eiketsu-save");
+
+            ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "EKD.COM"]);
         }
     </script>
 </body>
