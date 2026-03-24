@@ -73,15 +73,14 @@
             <hr>
             This project is a non-profit fan-made archive.<br>
             All rights for the original game belong to KOEI.<br>
-            저작권자의 요청 시 즉시 삭제될 수 있습니다.
+            권리자의 요청 시 즉시 삭제될 수 있습니다.
         </div>
     </div>
 
     <div id="dos"></div>
 
     <script>
-        // 새로운 장부 이름으로 깔끔하게 시작합니다.
-        const API_NAMESPACE = "eiketsu_2026_final_v7"; 
+        const API_NAMESPACE = "eiketsu_2026_final_v8"; 
         const ENCODED_PW = "YWRtaW43Nzc=";
 
         function checkAccess() {
@@ -118,7 +117,7 @@
             }
         }
 
-        // [핵심] 하루 1번만 카운트되도록 어뷰징 방지 로직 적용
+        // 중복 어뷰징 방지 로직 (슬래시 제거 원상복구)
         function recordMetric(metric) {
             const today = new Date().toISOString().split('T')[0];
             const storageKey = `recorded_${metric}_${today}`;
@@ -128,12 +127,11 @@
                 return;
             }
 
-            // up 요청은 특정 액션이므로 슬래시가 없어도 301 에러가 안 납니다.
             fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/${metric}/up`)
                 .then(response => {
                     if (response.ok) {
                         localStorage.setItem(storageKey, "true");
-                        console.log(`[통계] ${metric} 카운트 증가 성공`);
+                        console.log(`[통계] ${metric} 카운트 증가 완료`);
                     }
                 })
                 .catch(err => console.error("통계 서버 연결 실패", err));
@@ -141,16 +139,15 @@
 
         async function fetchStats() {
             try {
-                // [가장 중요한 수정] 끝에 슬래시(/)를 붙여서 301 CORS 에러를 원천 차단했습니다!
+                // 슬래시 뺀 원본 주소로 복구
                 const [vRes, pRes] = await Promise.all([
-                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count/`),
-                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count/`)
+                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count`),
+                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`)
                 ]);
                 
                 let vCount = 0;
                 let pCount = 0;
 
-                // 통신이 성공적(200)일 때만 숫자를 뽑아옵니다.
                 if (vRes.ok) {
                     const vData = await vRes.json();
                     vCount = vData.count || 0;
@@ -172,184 +169,6 @@
         async function launchGame() {
             recordMetric("play_count");
             
-            document.getElementById("intro-layer").style.display = "none";
-            document.getElementById("dos").style.display = "block";
-
-            Dos(document.getElementById("dos"), {
-                url: "./nuasuw2.dat",
-                noCloud: true,
-                autoStart: true
-            }).then((ci) => {
-                if (ci && typeof ci.persist === "function") {
-                    ci.persist("eiketsu-save-data");
-                }
-                ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
-            });
-        }
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>삼국지 영걸전 아카이브</title>
-    
-    <link rel="stylesheet" href="js-dos.css">
-    <script src="js-dos.js"></script>
-
-    <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; min-height: 100%; 
-            background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; 
-        }
-        .intro-container {
-            display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; text-align: center; 
-            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
-            padding: 20px; box-sizing: border-box;
-            overflow-y: auto; 
-        }
-        .intro-content { 
-            width: 100%; max-width: 500px; padding: 25px; border-radius: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 30px; 
-            box-sizing: border-box;
-        }
-        .game-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        h1 { font-size: 1.8rem; color: #2c3e50; margin: 0 0 10px 0; border-bottom: 3px solid #b71c1c; display: inline-block; }
-        p { margin-bottom: 25px; color: #666; font-size: 0.95rem; }
-        
-        .start-btn {
-            display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff;
-            background: #2c3e50; border: none; border-radius: 8px; cursor: pointer;
-            transition: background 0.3s;
-        }
-        .start-btn:hover { background: #b71c1c; }
-
-        #admin-panel { 
-            margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; 
-            font-size: 0.85rem; color: #1d39c4; display: none; text-align: left;
-        }
-        .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
-
-        .copyright-section {
-            padding: 20px 0 40px 0; font-size: 0.75rem; color: #999; line-height: 1.6;
-            width: 100%; max-width: 500px;
-        }
-        .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
-        #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
-    </style>
-</head>
-<body onload="checkAccess()">
-
-    <div id="intro-layer" class="intro-container" style="display: none;">
-        <div class="intro-content">
-            <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
-            <h1>삼국지 영걸전</h1>
-            <p>비영리 목적으로 운영되는 팬 메이드 페이지입니다.</p>
-            
-            <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
-
-            <div id="admin-panel">
-                <div style="text-align:center; font-weight:bold; margin-bottom:10px;">📊 실시간 관리자 통계</div>
-                <div class="stat-line"><span>누적 방문자 수</span><span id="visit-count">0</span></div>
-                <div class="stat-line"><span>게임 실행 횟수</span><span id="play-count">0</span></div>
-            </div>
-        </div>
-
-        <div class="copyright-section">
-            <hr>
-            This project is a non-profit fan-made archive.<br>
-            All rights for the original game belong to KOEI.<br>
-            저작권자의 요청 시 즉시 삭제될 수 있습니다.
-        </div>
-    </div>
-
-    <div id="dos"></div>
-
-    <script>
-        // 새로운 로직 적용을 위해 장부 이름을 v6로 변경하여 백지에서 테스트합니다.
-        const API_NAMESPACE = "eiketsu_2026_final_v6"; 
-        const ENCODED_PW = "YWRtaW43Nzc=";
-
-        function checkAccess() {
-            const isPassed = sessionStorage.getItem("is_passed");
-            const savedAdmin = sessionStorage.getItem("isAdmin");
-
-            if (isPassed === "true") {
-                showPage(savedAdmin === "true");
-                return;
-            }
-
-            const password = prompt("접속 암호를 입력하세요.");
-            if (password === "2026") {
-                recordMetric("visit_count");
-                sessionStorage.setItem("is_passed", "true");
-                sessionStorage.setItem("isAdmin", "false");
-                showPage(false);
-            } else if (btoa(password) === ENCODED_PW) { 
-                recordMetric("visit_count");
-                sessionStorage.setItem("is_passed", "true");
-                sessionStorage.setItem("isAdmin", "true");
-                showPage(true);
-            } else {
-                alert("암호가 틀렸습니다.");
-                location.reload();
-            }
-        }
-
-        function showPage(adminMode) {
-            document.getElementById("intro-layer").style.display = "flex";
-            if (adminMode) {
-                document.getElementById("admin-panel").style.display = "block";
-                fetchStats();
-            }
-        }
-
-        // --- [수정된 핵심 로직] 중복 방지 및 오류 추적 기능 추가 ---
-        function recordMetric(metric) {
-            // 1. 오늘 날짜를 기준으로 도장(Key) 생성
-            const today = new Date().toISOString().split('T')[0];
-            const storageKey = `recorded_${metric}_${today}`;
-
-            // 2. 이미 오늘 도장이 찍혀 있다면 서버에 보내지 않고 무시
-            if (localStorage.getItem(storageKey) === "true") {
-                console.log(`[통계] ${metric}은(는) 오늘 이미 기록되었습니다. (어뷰징 방지)`);
-                return;
-            }
-
-            // 3. 도장이 없다면 서버에 카운트 증가 요청
-            fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/${metric}/up`)
-                .then(response => {
-                    if (response.ok) {
-                        // 4. 통신에 성공했을 때만 내 브라우저에 도장 찍기
-                        localStorage.setItem(storageKey, "true");
-                        console.log(`[통계] ${metric} 정상적으로 1 증가했습니다.`);
-                    }
-                })
-                .catch((err) => {
-                    console.error(`[통계] ${metric} 기록 실패. 광고 차단기가 켜져 있는지 확인하세요.`, err);
-                });
-        }
-        // --------------------------------------------------------
-
-        async function fetchStats() {
-            try {
-                const [vRes, pRes] = await Promise.all([
-                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count`),
-                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`)
-                ]);
-                const vData = await vRes.json();
-                const pData = await pRes.json();
-                document.getElementById("visit-count").innerText = vData.count || 0;
-                document.getElementById("play-count").innerText = pData.count || 0;
-            } catch (err) { console.error("Stats fail"); }
-        }
-
-        async function launchGame() {
-            recordMetric("play_count");
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
