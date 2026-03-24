@@ -5,49 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>삼국지 영걸전 아카이브</title>
     
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PW92P22RPV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-PW92P22RPV');
+    </script>
     <link rel="stylesheet" href="js-dos.css">
     <script src="js-dos.js"></script>
 
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; min-height: 100%; 
-            background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; 
-        }
-        .intro-container {
-            display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; text-align: center; 
-            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
-            padding: 20px; box-sizing: border-box;
-            overflow-y: auto; 
-        }
-        .intro-content { 
-            width: 100%; max-width: 500px; padding: 25px; border-radius: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 30px; 
-            box-sizing: border-box;
-        }
+        body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; }
+        .intro-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
+        .intro-content { width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 40px; box-sizing: border-box; }
         .game-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        h1 { font-size: 1.8rem; color: #2c3e50; margin: 0 0 10px 0; border-bottom: 3px solid #b71c1c; display: inline-block; }
-        p { margin-bottom: 25px; color: #666; font-size: 0.95rem; }
+        h1 { font-size: 2rem; color: #2c3e50; margin: 0 0 15px 0; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
+        p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
         
-        .start-btn {
-            display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff;
-            background: #2c3e50; border: none; border-radius: 8px; cursor: pointer;
-            transition: background 0.3s;
-        }
+        .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
         .start-btn:hover { background: #b71c1c; }
 
-        #admin-panel { 
-            margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; 
-            font-size: 0.85rem; color: #1d39c4; display: none; text-align: left;
-        }
-        .stat-line { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        #admin-panel { margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; font-size: 0.9rem; color: #1d39c4; display: none; text-align: center; line-height: 1.6; }
+        .ga-btn { display: inline-block; margin-top: 15px; padding: 10px 20px; background: #1d39c4; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background 0.3s; }
+        .ga-btn:hover { background: #092bbf; }
 
-        .copyright-section {
-            padding: 20px 0 40px 0; font-size: 0.75rem; color: #999; line-height: 1.6;
-            width: 100%; max-width: 500px;
-        }
+        .copyright-section { padding: 20px 0; font-size: 0.8rem; color: #888; line-height: 1.6; width: 100%; max-width: 500px; margin-top: auto; }
         .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
     </style>
@@ -58,14 +42,16 @@
         <div class="intro-content">
             <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
             <h1>삼국지 영걸전</h1>
-            <p>비영리 목적으로 운영되는 팬 메이드 페이지입니다.</p>
+            <p>비영리 목적으로 운영되는 팬 메이드 페이지입니다.<br>암호를 아는 분들만 플레이할 수 있습니다.</p>
             
             <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
 
             <div id="admin-panel">
-                <div style="text-align:center; font-weight:bold; margin-bottom:10px;">📊 실시간 관리자 통계</div>
-                <div class="stat-line"><span>누적 방문자 수</span><span id="visit-count">0</span></div>
-                <div class="stat-line"><span>게임 실행 횟수</span><span id="play-count">0</span></div>
+                <strong>📊 관리자 통계 모드 활성화</strong><br><br>
+                구글 애널리틱스 센서가 정상 작동 중입니다.<br>
+                정확한 방문자 및 실행 횟수는 대시보드에서 확인하세요.
+                <br>
+                <a href="https://analytics.google.com/" target="_blank" class="ga-btn">구글 통계 확인하기</a>
             </div>
         </div>
 
@@ -80,7 +66,6 @@
     <div id="dos"></div>
 
     <script>
-        const API_NAMESPACE = "eiketsu_2026_final_v9"; 
         const ENCODED_PW = "YWRtaW43Nzc=";
 
         function checkAccess() {
@@ -94,12 +79,10 @@
 
             const password = prompt("접속 암호를 입력하세요.");
             if (password === "2026") {
-                recordMetric("visit_count");
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "false");
                 showPage(false);
             } else if (btoa(password) === ENCODED_PW) { 
-                recordMetric("visit_count");
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "true");
                 showPage(true);
@@ -113,82 +96,36 @@
             document.getElementById("intro-layer").style.display = "flex";
             if (adminMode) {
                 document.getElementById("admin-panel").style.display = "block";
-                fetchStats();
-            }
-        }
-
-        // 중복 어뷰징 방지 로직 + 프록시 우회
-        function recordMetric(metric) {
-            const today = new Date().toISOString().split('T')[0];
-            const storageKey = `recorded_${metric}_${today}`;
-
-            if (localStorage.getItem(storageKey) === "true") {
-                console.log(`[통계] ${metric}은(는) 오늘 이미 기록되었습니다.`);
-                return;
-            }
-
-            // 고장난 서버 앞단에 CORS 통과증을 강제로 붙여주는 프록시(allorigins)를 배치합니다.
-            const targetUrl = `https://api.counterapi.dev/v1/${API_NAMESPACE}/${metric}/up`;
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-            fetch(proxyUrl)
-                .then(response => {
-                    if (response.ok) {
-                        localStorage.setItem(storageKey, "true");
-                        console.log(`[통계] ${metric} 프록시 우회 기록 성공`);
-                    }
-                })
-                .catch(err => console.error("통계 서버 연결 실패", err));
-        }
-
-        async function fetchStats() {
-            try {
-                const vUrl = `https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count`;
-                const pUrl = `https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`;
-                
-                // 데이터를 가져올 때도 프록시를 거쳐 CORS 차단을 회피합니다.
-                const [vRes, pRes] = await Promise.all([
-                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(vUrl)}`),
-                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(pUrl)}`)
-                ]);
-                
-                let vCount = 0;
-                let pCount = 0;
-
-                if (vRes.ok) {
-                    const vData = await vRes.json();
-                    vCount = vData.count || 0;
-                }
-                if (pRes.ok) {
-                    const pData = await pRes.json();
-                    pCount = pData.count || 0;
-                }
-                
-                document.getElementById("visit-count").innerText = vCount;
-                document.getElementById("play-count").innerText = pCount;
-            } catch (err) { 
-                console.error("통계 로드 실패:", err); 
-                document.getElementById("visit-count").innerText = "오류";
-                document.getElementById("play-count").innerText = "오류";
             }
         }
 
         async function launchGame() {
-            recordMetric("play_count");
-            
+            // 구글 애널리틱스로 '게임 플레이' 이벤트 전송
+            if (typeof gtag === 'function') {
+                gtag('event', 'play_game', {
+                    'event_category': 'Game',
+                    'event_label': 'Eiketsuden Start'
+                });
+                console.log("구글 통계: 게임 실행 기록 전송 완료");
+            }
+
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
 
-            Dos(document.getElementById("dos"), {
-                url: "./nuasuw2.dat",
-                noCloud: true,
-                autoStart: true
-            }).then((ci) => {
-                if (ci && typeof ci.persist === "function") {
-                    ci.persist("eiketsu-save-data");
-                }
-                ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
-            });
+            try {
+                Dos(document.getElementById("dos"), {
+                    url: "./nuasuw2.dat",
+                    noCloud: true,
+                    autoStart: true
+                }).then((ci) => {
+                    if (ci && typeof ci.persist === "function") {
+                        ci.persist("eiketsu-save-data");
+                    }
+                    ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
+                });
+            } catch (err) {
+                console.error("게임 실행 오류:", err);
+            }
         }
     </script>
 </body>
