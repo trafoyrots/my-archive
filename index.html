@@ -80,7 +80,7 @@
     <div id="dos"></div>
 
     <script>
-        const API_NAMESPACE = "eiketsu_2026_final_v8"; 
+        const API_NAMESPACE = "eiketsu_2026_final_v9"; 
         const ENCODED_PW = "YWRtaW43Nzc=";
 
         function checkAccess() {
@@ -117,7 +117,7 @@
             }
         }
 
-        // 중복 어뷰징 방지 로직 (슬래시 제거 원상복구)
+        // 중복 어뷰징 방지 로직 + 프록시 우회
         function recordMetric(metric) {
             const today = new Date().toISOString().split('T')[0];
             const storageKey = `recorded_${metric}_${today}`;
@@ -127,11 +127,15 @@
                 return;
             }
 
-            fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/${metric}/up`)
+            // 고장난 서버 앞단에 CORS 통과증을 강제로 붙여주는 프록시(allorigins)를 배치합니다.
+            const targetUrl = `https://api.counterapi.dev/v1/${API_NAMESPACE}/${metric}/up`;
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+
+            fetch(proxyUrl)
                 .then(response => {
                     if (response.ok) {
                         localStorage.setItem(storageKey, "true");
-                        console.log(`[통계] ${metric} 카운트 증가 완료`);
+                        console.log(`[통계] ${metric} 프록시 우회 기록 성공`);
                     }
                 })
                 .catch(err => console.error("통계 서버 연결 실패", err));
@@ -139,10 +143,13 @@
 
         async function fetchStats() {
             try {
-                // 슬래시 뺀 원본 주소로 복구
+                const vUrl = `https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count`;
+                const pUrl = `https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`;
+                
+                // 데이터를 가져올 때도 프록시를 거쳐 CORS 차단을 회피합니다.
                 const [vRes, pRes] = await Promise.all([
-                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/visit_count`),
-                    fetch(`https://api.counterapi.dev/v1/${API_NAMESPACE}/play_count`)
+                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(vUrl)}`),
+                    fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(pUrl)}`)
                 ]);
                 
                 let vCount = 0;
