@@ -110,7 +110,7 @@
 
     <div id="gamepad" class="gamepad">
         <div class="action-keys">
-            <button onmousedown="pressKey(27, event)" onmouseup="releaseKey(27, event)" onmouseleave="releaseKey(27, event)" ontouchstart="pressKey(27, event)" ontouchend="releaseKey(27, event)" ontouchcancel="releaseKey(27, event)">ESC (취소/메뉴)</button>
+            <button onmousedown="forceEsc(event)" ontouchstart="forceEsc(event)">ESC (취소/메뉴)</button>
         </div>
     </div>
 
@@ -282,48 +282,46 @@
             }, 50);
         }
 
-        function pressKey(code, e) {
-            if(e && e.cancelable) e.preventDefault(); 
-            
-            if (dosInterface) {
-                if (typeof dosInterface.sendKeyEvent === "function") {
-                    dosInterface.sendKeyEvent(code, true);
-                } else if (typeof dosInterface.simulateKeyPress === "function") {
-                    dosInterface.simulateKeyPress(code);
-                }
-            }
-
-            const event = new KeyboardEvent("keydown", {
-                keyCode: code,
-                which: code,
-                bubbles: true,
-                cancelable: true
-            });
-            document.dispatchEvent(event);
+        // 브라우저 보안벽을 우회하여 게임 엔진에 직접 키를 꽂아넣는 초강력 함수
+        function forceEsc(e) {
+            if (e && e.cancelable) e.preventDefault();
             
             const canvas = document.querySelector('#dos canvas');
-            if (canvas) canvas.dispatchEvent(event);
-        }
+            if (canvas) canvas.focus(); // 캔버스 포커스 강제 확보
 
-        function releaseKey(code, e) {
-            if(e && e.cancelable) e.preventDefault();
-            
+            // 1번 공격: js-dos 내장 모듈 강제 타격 (C++ 에뮬레이터 코어 직접 접근)
             if (dosInterface) {
-                if (typeof dosInterface.sendKeyEvent === "function") {
-                    dosInterface.sendKeyEvent(code, false);
-                }
+                // Emscripten C++ 내부 함수에 직접 접근 시도 (가장 확률이 높음)
+                try {
+                    if (dosInterface.module && typeof dosInterface.module._SDL_SendKeyboardKey === 'function') {
+                        dosInterface.module._SDL_SendKeyboardKey(1, 41); // 41 = ESC 스캔코드 누름
+                        setTimeout(() => dosInterface.module._SDL_SendKeyboardKey(0, 41), 100); // 뗌
+                    }
+                } catch(err) {}
+
+                // js-dos 6 버전 전용 네이티브 함수 타격
+                try {
+                    if (typeof dosInterface.simulateKeyEvent === 'function') {
+                        dosInterface.simulateKeyEvent(27, true);
+                        setTimeout(() => dosInterface.simulateKeyEvent(27, false), 100);
+                    } else if (typeof dosInterface.simulateKeyPress === 'function') {
+                        dosInterface.simulateKeyPress(27);
+                    }
+                } catch(err) {}
             }
 
-            const event = new KeyboardEvent("keyup", {
-                keyCode: code,
-                which: code,
-                bubbles: true,
-                cancelable: true
-            });
-            document.dispatchEvent(event);
+            // 2번 공격: 브라우저 DOM 이벤트에 모든 속성을 채워서 강제 주입
+            const evOpts = { key: "Escape", code: "Escape", keyCode: 27, which: 27, charCode: 0, bubbles: true, cancelable: true };
+            const kd = new KeyboardEvent("keydown", evOpts);
+            const ku = new KeyboardEvent("keyup", evOpts);
             
-            const canvas = document.querySelector('#dos canvas');
-            if (canvas) canvas.dispatchEvent(event);
+            document.dispatchEvent(kd);
+            if (canvas) canvas.dispatchEvent(kd);
+            
+            setTimeout(() => {
+                document.dispatchEvent(ku);
+                if (canvas) canvas.dispatchEvent(ku);
+            }, 100);
         }
     </script>
 </body>
