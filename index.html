@@ -41,12 +41,15 @@
         
         #dos { width: 100%; height: 100%; transform-origin: top left; }
         
-        .game-menu { display: none; position: fixed; top: 15px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 140px; }
-        .game-btn { padding: 8px 12px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; width: 100%; box-sizing: border-box; }
-        .game-btn:hover { background: rgba(183, 28, 28, 0.9); }
+        /* 새로 개편된 상단 반투명 툴바 */
+        .top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; align-items: center; }
+        .top-bar:hover, .top-bar:active, .top-bar.active { opacity: 1; background: rgba(0,0,0,0.6); }
+        .top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; white-space: nowrap; }
+        .top-btn:hover { background: rgba(183, 28, 28, 0.9); }
         
-        .zoom-controls { display: flex; gap: 5px; width: 100%; }
-        .zoom-controls .game-btn { flex: 1; padding: 8px 0; text-align: center; }
+        /* 세이브 하위 메뉴 (숨김/표시 전환) */
+        .save-menu { display: none; position: fixed; top: 55px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 130px; opacity: 0.95; }
+        .save-menu .top-btn { width: 100%; box-sizing: border-box; }
 
         .gamepad { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 180px; background: #1a1a1a; z-index: 2000; justify-content: space-between; align-items: center; padding: 0 5%; box-sizing: border-box; border-top: 2px solid #333; }
         .dpad { display: grid; grid-template-columns: repeat(3, 55px); grid-template-rows: repeat(3, 55px); gap: 5px; }
@@ -58,7 +61,6 @@
         .dpad .right { grid-column: 3; grid-row: 2; }
         .dpad .down { grid-column: 2; grid-row: 3; }
         
-        /* 액션 키 레이아웃 변경 (2x2 그리드로 마우스 클릭과 엔터/ESC 배치) */
         .action-keys { display: grid; grid-template-columns: repeat(2, 65px); grid-template-rows: repeat(2, 65px); gap: 10px; }
         .action-keys button { width: 100%; height: 100%; font-size: 0.85rem; font-weight: bold; }
         .action-keys .mouse-btn { background: rgba(183, 28, 28, 0.3); border-color: rgba(183, 28, 28, 0.6); }
@@ -70,6 +72,7 @@
             .dpad { grid-template-columns: repeat(3, 45px); grid-template-rows: repeat(3, 45px); }
             .action-keys { grid-template-columns: repeat(2, 55px); grid-template-rows: repeat(2, 55px); gap: 8px; }
             .action-keys button { font-size: 0.75rem; }
+            .top-btn { padding: 6px 8px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -106,15 +109,16 @@
 
     <input type="file" id="save-upload" style="display: none;" onchange="uploadSave(event)">
 
-    <div id="game-menu" class="game-menu">
-        <button class="game-btn" onclick="document.getElementById('save-upload').click()">📂 세이브 업로드</button>
-        <button class="game-btn" onclick="downloadSaves()">💾 세이브 다운로드</button>
-        <button class="game-btn" onclick="toggleGamepad()">🎮 모바일 키패드</button>
-        
-        <div class="zoom-controls">
-            <button class="game-btn" onclick="changeZoom(50)">🔍 확대</button>
-            <button class="game-btn" onclick="changeZoom(-50)">🔎 축소</button>
-        </div>
+    <div id="top-bar" class="top-bar">
+        <button class="top-btn" onclick="toggleSaveMenu()">💾 세이브</button>
+        <button class="top-btn" onclick="toggleGamepad()">🎮 키패드</button>
+        <button class="top-btn" onclick="changeZoom(50)">🔍 +</button>
+        <button class="top-btn" onclick="changeZoom(-50)">🔎 -</button>
+    </div>
+
+    <div id="save-menu" class="save-menu">
+        <button class="top-btn" onclick="document.getElementById('save-upload').click()">📂 파일 업로드</button>
+        <button class="top-btn" onclick="downloadSaves()">💾 파일 다운로드</button>
     </div>
 
     <div id="gamepad" class="gamepad">
@@ -179,7 +183,8 @@
 
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos-wrapper").style.display = "block";
-            document.getElementById("game-menu").style.display = "flex";
+            // 시작 시 상단 툴바 표시
+            document.getElementById("top-bar").style.display = "flex";
 
             try {
                 Dos(document.getElementById("dos"), {
@@ -199,6 +204,19 @@
             }
         }
 
+        // 세이브 메뉴 열기/닫기 제어
+        function toggleSaveMenu() {
+            const menu = document.getElementById("save-menu");
+            const bar = document.getElementById("top-bar");
+            if (menu.style.display === "flex") {
+                menu.style.display = "none";
+                bar.classList.remove("active");
+            } else {
+                menu.style.display = "flex";
+                bar.classList.add("active");
+            }
+        }
+
         function downloadSaves() {
             if (!dosInterface) return alert("게임이 로드되지 않았습니다.");
             
@@ -215,6 +233,7 @@
                     a.click();
                     URL.revokeObjectURL(url);
                     alert(`[${fileName}] 다운로드가 완료되었습니다.`);
+                    toggleSaveMenu(); // 완료 후 메뉴 닫기
                 }).catch(e => {
                     console.error(e);
                     alert("세이브 파일을 찾을 수 없습니다. 파일명을 다시 확인해주세요.");
@@ -234,6 +253,7 @@
                 try {
                     dosInterface.fs.writeFile(file.name, data).then(() => {
                         alert(`[${file.name}] 업로드 완료!\n게임 내에서 해당 슬롯을 로드해 주세요.`);
+                        toggleSaveMenu(); // 완료 후 메뉴 닫기
                     }).catch(err => {
                         console.error(err);
                         alert("파일 덮어쓰기 중 오류가 발생했습니다.");
@@ -287,13 +307,12 @@
             }, 50);
         }
 
-        // --- 마우스 클릭 이벤트를 강제로 발생시키는 함수 ---
         function pressMouse(btnCode, e) {
             if(e && e.cancelable) e.preventDefault();
             const canvas = document.querySelector('#dos canvas');
             if(canvas) {
                 const event = new MouseEvent("mousedown", {
-                    button: btnCode, // 0: 좌클릭, 2: 우클릭
+                    button: btnCode, 
                     bubbles: true,
                     cancelable: true,
                     view: window
