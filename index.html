@@ -37,13 +37,10 @@
         .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
         
         #dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; transition: height 0.2s ease-out; overflow: auto; -webkit-overflow-scrolling: touch; }
-        
-        /* 키패드가 줄어들었으므로 게임 화면 영역을 80px만 줄입니다 */
         body.gamepad-on #dos-wrapper { height: calc(100vh - 80px); }
         
         #dos { width: 100%; height: 100%; transform-origin: top left; }
         
-        /* 상단 반투명 툴바 */
         .top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; align-items: center; }
         .top-bar:hover, .top-bar:active, .top-bar.active { opacity: 1; background: rgba(0,0,0,0.6); }
         .top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; white-space: nowrap; }
@@ -52,7 +49,6 @@
         .save-menu { display: none; position: fixed; top: 55px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 130px; opacity: 0.95; }
         .save-menu .top-btn { width: 100%; box-sizing: border-box; }
 
-        /* 방향키를 없애고 높이를 80px로 대폭 줄인 미니 게임패드 */
         .gamepad { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: #1a1a1a; z-index: 2000; justify-content: center; align-items: center; padding: 0; box-sizing: border-box; border-top: 2px solid #333; }
         
         .action-keys { display: flex; gap: 20px; }
@@ -126,18 +122,18 @@
         let dosInterface = null; 
         let currentZoom = 100; 
         
-        // 새로 추가된 변수: 마지막 터치/마우스 좌표 추적
-        let lastMouseX = 0;
-        let lastMouseY = 0;
+        let lastMouseX = window.innerWidth / 2;
+        let lastMouseY = window.innerHeight / 2;
 
-        // 좌표 추적 이벤트 리스너 설정
+        // 버튼 클릭 시 마우스 좌표가 엉뚱한 곳으로 갱신되는 것을 막기 위해, 
+        // 오직 게임 화면(dos) 내부에서의 터치/마우스 이동만 기억합니다.
         document.addEventListener('DOMContentLoaded', () => {
-            const wrapper = document.getElementById("dos-wrapper");
-            wrapper.addEventListener('mousemove', (e) => {
+            const dosEl = document.getElementById("dos");
+            dosEl.addEventListener('mousemove', (e) => {
                 lastMouseX = e.clientX;
                 lastMouseY = e.clientY;
             });
-            wrapper.addEventListener('touchstart', (e) => {
+            dosEl.addEventListener('touchstart', (e) => {
                 if (e.touches.length > 0) {
                     lastMouseX = e.touches[0].clientX;
                     lastMouseY = e.touches[0].clientY;
@@ -182,7 +178,6 @@
                     'event_category': 'Game',
                     'event_label': 'Eiketsuden Start'
                 });
-                console.log("구글 통계: 게임 실행 기록 전송 완료");
             }
 
             document.getElementById("intro-layer").style.display = "none";
@@ -309,20 +304,27 @@
             }, 50);
         }
 
-        // 마지막 좌표를 이용하도록 개선된 마우스 클릭 함수
+        // 에뮬레이터가 요구하는 강력한 PointerEvent를 발생시키도록 업그레이드했습니다.
         function pressMouse(btnCode, e) {
             if(e && e.cancelable) e.preventDefault();
             const canvas = document.querySelector('#dos canvas');
             if(canvas) {
-                const event = new MouseEvent("mousedown", {
+                const buttonsVal = btnCode === 2 ? 2 : 1; 
+                const eventOpts = {
                     button: btnCode, 
-                    clientX: lastMouseX, // 추적된 마지막 X 좌표
-                    clientY: lastMouseY, // 추적된 마지막 Y 좌표
+                    buttons: buttonsVal, // 엔진이 누른 상태를 인지하도록 추가
+                    clientX: lastMouseX, 
+                    clientY: lastMouseY, 
                     bubbles: true,
                     cancelable: true,
                     view: window
-                });
-                canvas.dispatchEvent(event);
+                };
+
+                // 최신 브라우저 및 에뮬레이터 호환을 위해 PointerEvent 우선 적용
+                if (window.PointerEvent) {
+                    canvas.dispatchEvent(new PointerEvent("pointerdown", eventOpts));
+                }
+                canvas.dispatchEvent(new MouseEvent("mousedown", eventOpts));
             }
         }
 
@@ -330,15 +332,24 @@
             if(e && e.cancelable) e.preventDefault();
             const canvas = document.querySelector('#dos canvas');
             if(canvas) {
-                const event = new MouseEvent("mouseup", {
+                const eventOpts = {
                     button: btnCode,
+                    buttons: 0, 
                     clientX: lastMouseX,
                     clientY: lastMouseY,
                     bubbles: true,
                     cancelable: true,
                     view: window
-                });
-                canvas.dispatchEvent(event);
+                };
+
+                if (window.PointerEvent) {
+                    canvas.dispatchEvent(new PointerEvent("pointerup", eventOpts));
+                }
+                canvas.dispatchEvent(new MouseEvent("mouseup", eventOpts));
+                // 우클릭의 경우 컨텍스트 메뉴 이벤트도 함께 쏘아줍니다.
+                if (btnCode === 2) {
+                    canvas.dispatchEvent(new MouseEvent("contextmenu", eventOpts));
+                }
             }
         }
 
