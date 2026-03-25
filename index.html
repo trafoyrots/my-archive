@@ -36,11 +36,11 @@
         .copyright-section { padding: 20px 0; font-size: 0.8rem; color: #888; line-height: 1.6; width: 100%; max-width: 500px; margin-top: auto; }
         .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
         
-        #dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; transition: height 0.2s ease-out; overflow: auto; -webkit-overflow-scrolling: touch; }
-        body.gamepad-on #dos-wrapper { height: calc(100vh - 80px); }
-        
+        /* 거추장스러운 하단 키패드를 완전히 없애고 100% 풀스크린 적용 */
+        #dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; overflow: auto; -webkit-overflow-scrolling: touch; }
         #dos { width: 100%; height: 100%; transform-origin: top left; }
         
+        /* 상단 플로팅 메뉴 디자인 유지 */
         .top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; align-items: center; }
         .top-bar:hover, .top-bar:active, .top-bar.active { opacity: 1; background: rgba(0,0,0,0.6); }
         .top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; white-space: nowrap; }
@@ -49,16 +49,7 @@
         .save-menu { display: none; position: fixed; top: 55px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 130px; opacity: 0.95; }
         .save-menu .top-btn { width: 100%; box-sizing: border-box; }
 
-        .gamepad { display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: #1a1a1a; z-index: 2000; justify-content: center; align-items: center; padding: 0; box-sizing: border-box; border-top: 2px solid #333; }
-        
-        .action-keys { display: flex; gap: 20px; width: 100%; justify-content: center; padding: 0 20px; box-sizing: border-box; }
-        .action-keys button { width: 150px; height: 50px; background: rgba(255, 255, 255, 0.15); border: 2px solid #555; border-radius: 8px; color: white; font-size: 1.1rem; font-weight: bold; user-select: none; cursor: pointer; touch-action: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; letter-spacing: 2px; }
-        .action-keys button:active { background: rgba(255, 255, 255, 0.4); transform: translateY(2px); box-shadow: none; }
-
         @media (max-width: 768px) {
-            body.gamepad-on #dos-wrapper { height: calc(100vh - 70px); }
-            .gamepad { height: 70px; }
-            .action-keys button { width: 130px; height: 45px; font-size: 1rem; }
             .top-btn { padding: 6px 8px; font-size: 0.8rem; }
         }
     </style>
@@ -98,7 +89,8 @@
 
     <div id="top-bar" class="top-bar">
         <button class="top-btn" onclick="toggleSaveMenu()">💾 세이브</button>
-        <button class="top-btn" onclick="toggleGamepad()">🎮 키패드</button>
+        <button id="rc-btn" class="top-btn" onclick="toggleRC()">🖱 우클릭 모드 [OFF]</button>
+        <button class="top-btn" onmousedown="forceEsc(event)" ontouchstart="forceEsc(event)">⌨️ ESC</button>
         <button class="top-btn" onclick="changeZoom(50)">🔍 +</button>
         <button class="top-btn" onclick="changeZoom(-50)">🔎 -</button>
     </div>
@@ -106,12 +98,6 @@
     <div id="save-menu" class="save-menu">
         <button class="top-btn" onclick="document.getElementById('save-upload').click()">📂 파일 업로드</button>
         <button class="top-btn" onclick="downloadSaves()">💾 파일 다운로드</button>
-    </div>
-
-    <div id="gamepad" class="gamepad">
-        <div class="action-keys">
-            <button onmousedown="forceEsc(event)" ontouchstart="forceEsc(event)">ESC (취소/메뉴)</button>
-        </div>
     </div>
 
     <script>
@@ -241,18 +227,6 @@
             event.target.value = ""; 
         }
 
-        function toggleGamepad() {
-            const pad = document.getElementById("gamepad");
-            const body = document.body;
-            if (pad.style.display === "flex") {
-                pad.style.display = "none";
-                body.classList.remove("gamepad-on");
-            } else {
-                pad.style.display = "flex";
-                body.classList.add("gamepad-on");
-            }
-        }
-
         function changeZoom(amount) {
             currentZoom += amount;
             if (currentZoom < 100) currentZoom = 100;
@@ -282,47 +256,80 @@
             }, 50);
         }
 
-        // 브라우저 보안벽을 우회하여 게임 엔진에 직접 키를 꽂아넣는 초강력 함수
         function forceEsc(e) {
             if (e && e.cancelable) e.preventDefault();
-            
-            const canvas = document.querySelector('#dos canvas');
-            if (canvas) canvas.focus(); // 캔버스 포커스 강제 확보
-
-            // 1번 공격: js-dos 내장 모듈 강제 타격 (C++ 에뮬레이터 코어 직접 접근)
             if (dosInterface) {
-                // Emscripten C++ 내부 함수에 직접 접근 시도 (가장 확률이 높음)
                 try {
-                    if (dosInterface.module && typeof dosInterface.module._SDL_SendKeyboardKey === 'function') {
-                        dosInterface.module._SDL_SendKeyboardKey(1, 41); // 41 = ESC 스캔코드 누름
-                        setTimeout(() => dosInterface.module._SDL_SendKeyboardKey(0, 41), 100); // 뗌
-                    }
-                } catch(err) {}
-
-                // js-dos 6 버전 전용 네이티브 함수 타격
-                try {
-                    if (typeof dosInterface.simulateKeyEvent === 'function') {
-                        dosInterface.simulateKeyEvent(27, true);
-                        setTimeout(() => dosInterface.simulateKeyEvent(27, false), 100);
-                    } else if (typeof dosInterface.simulateKeyPress === 'function') {
+                    if (typeof dosInterface.simulateKeyPress === 'function') {
                         dosInterface.simulateKeyPress(27);
                     }
                 } catch(err) {}
             }
-
-            // 2번 공격: 브라우저 DOM 이벤트에 모든 속성을 채워서 강제 주입
-            const evOpts = { key: "Escape", code: "Escape", keyCode: 27, which: 27, charCode: 0, bubbles: true, cancelable: true };
-            const kd = new KeyboardEvent("keydown", evOpts);
-            const ku = new KeyboardEvent("keyup", evOpts);
-            
-            document.dispatchEvent(kd);
-            if (canvas) canvas.dispatchEvent(kd);
-            
-            setTimeout(() => {
-                document.dispatchEvent(ku);
-                if (canvas) canvas.dispatchEvent(ku);
-            }, 100);
+            const evOpts = { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true };
+            document.dispatchEvent(new KeyboardEvent("keydown", evOpts));
+            setTimeout(() => document.dispatchEvent(new KeyboardEvent("keyup", evOpts)), 50);
         }
+
+        // ==========================================
+        // 혁신적인 "우클릭 장전" 모드 (엔진 터치 제어 탈취)
+        // ==========================================
+        let rcMode = false;
+        function toggleRC() {
+            rcMode = !rcMode;
+            const btn = document.getElementById('rc-btn');
+            if (rcMode) {
+                btn.style.backgroundColor = '#b71c1c';
+                btn.innerText = '🖱 우클릭 장전됨 [ON]';
+            } else {
+                btn.style.backgroundColor = 'rgba(44, 62, 80, 0.8)';
+                btn.innerText = '🖱 우클릭 모드 [OFF]';
+            }
+        }
+
+        // 모바일 터치 이벤트를 에뮬레이터가 눈치채기 전에 가로채서 순수한 우클릭 마우스 신호로 변조하여 꽂아넣습니다.
+        window.addEventListener('touchstart', function(e) {
+            if (rcMode && e.target.tagName === 'CANVAS') {
+                e.stopPropagation(); // 에뮬레이터의 좌클릭 인식 차단
+                e.preventDefault();
+                const touch = e.touches[0];
+                e.target.dispatchEvent(new MouseEvent('mousedown', {
+                    bubbles: true, cancelable: true, view: window,
+                    clientX: touch.clientX, clientY: touch.clientY,
+                    screenX: touch.screenX, screenY: touch.screenY,
+                    button: 2, buttons: 2
+                }));
+            }
+        }, { capture: true, passive: false });
+
+        window.addEventListener('touchend', function(e) {
+            if (rcMode && e.target.tagName === 'CANVAS') {
+                e.stopPropagation();
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                e.target.dispatchEvent(new MouseEvent('mouseup', {
+                    bubbles: true, cancelable: true, view: window,
+                    clientX: touch.clientX, clientY: touch.clientY,
+                    screenX: touch.screenX, screenY: touch.screenY,
+                    button: 2, buttons: 0
+                }));
+                // 우클릭을 1회 사용했으므로 자동으로 모드를 꺼서 다시 평소(좌클릭) 상태로 돌려놓습니다.
+                toggleRC();
+            }
+        }, { capture: true, passive: false });
+
+        window.addEventListener('touchmove', function(e) {
+            if (rcMode && e.target.tagName === 'CANVAS') {
+                e.stopPropagation();
+                e.preventDefault();
+                const touch = e.touches[0];
+                e.target.dispatchEvent(new MouseEvent('mousemove', {
+                    bubbles: true, cancelable: true, view: window,
+                    clientX: touch.clientX, clientY: touch.clientY,
+                    screenX: touch.screenX, screenY: touch.screenY,
+                    button: 2, buttons: 2
+                }));
+            }
+        }, { capture: true, passive: false });
     </script>
 </body>
 </html>
