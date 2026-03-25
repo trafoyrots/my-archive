@@ -19,6 +19,282 @@
     <script src="js-dos.js"></script>
 
     <style>
+        body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
+        
+        .intro-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
+        .intro-content { width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 40px; box-sizing: border-box; }
+        .game-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        h1 { font-size: 2rem; color: #2c3e50; margin: 0 0 15px 0; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
+        p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
+        
+        .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
+        .start-btn:hover { background: #b71c1c; }
+        
+        .mobile-warning { font-size: 0.85rem; color: #d32f2f; margin-top: 15px; margin-bottom: 0; font-weight: bold; }
+
+        #admin-panel { margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; font-size: 0.9rem; color: #1d39c4; display: none; text-align: center; line-height: 1.6; }
+        .ga-btn { display: inline-block; margin-top: 15px; padding: 10px 20px; background: #1d39c4; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background 0.3s; }
+        .ga-btn:hover { background: #092bbf; }
+
+        .copyright-section { padding: 20px 0; font-size: 0.8rem; color: #888; line-height: 1.6; width: 100%; max-width: 500px; margin-top: auto; }
+        .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
+        
+        #dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; overflow: auto; -webkit-overflow-scrolling: touch; }
+        #dos { width: 100%; height: 100%; transform-origin: top left; }
+        
+        .top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; align-items: center; }
+        .top-bar:hover, .top-bar:active, .top-bar.active { opacity: 1; background: rgba(0,0,0,0.6); }
+        .top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; white-space: nowrap; }
+        .top-btn:hover { background: rgba(183, 28, 28, 0.9); }
+        
+        .save-menu { display: none; position: fixed; top: 55px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 130px; opacity: 0.95; }
+        .save-menu .top-btn { width: 100%; box-sizing: border-box; }
+
+        @media (max-width: 768px) {
+            .top-btn { padding: 6px 8px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body onload="checkAccess()" oncontextmenu="return false;">
+
+    <div id="intro-layer" class="intro-container" style="display: none;">
+        <div class="intro-content">
+            <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
+            <h1>삼국지 영걸전</h1>
+            <p>비영리 목적으로 운영되는 팬 메이드 페이지입니다.</p>
+            
+            <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
+            <p class="mobile-warning">모바일은 우클릭 사용이 불가하니 PC를 사용하세요.</p>
+
+            <div id="admin-panel">
+                <strong>📊 관리자 통계 모드 활성화</strong><br><br>
+                구글 애널리틱스 센서가 정상 작동 중입니다.<br>
+                정확한 방문자 및 실행 횟수는 대시보드에서 확인하세요.
+                <br>
+                <a href="https://analytics.google.com/" target="_blank" class="ga-btn">구글 통계 확인하기</a>
+            </div>
+        </div>
+
+        <div class="copyright-section">
+            <hr>
+            This project is a non-profit fan-made archive.<br>
+            All rights for the original game belong to KOEI.<br>
+            권리자의 요청 시 즉시 삭제될 수 있습니다.
+        </div>
+    </div>
+
+    <div id="dos-wrapper">
+        <div id="dos"></div>
+    </div>
+
+    <input type="file" id="save-upload" style="display: none;" onchange="uploadSave(event)">
+
+    <div id="top-bar" class="top-bar">
+        <button class="top-btn" onclick="toggleSaveMenu()">💾 세이브</button>
+        <button class="top-btn" onmousedown="forceEsc(event)" ontouchstart="forceEsc(event)">⌨️ ESC</button>
+        <button class="top-btn" onclick="changeZoom(50)">🔍 +</button>
+        <button class="top-btn" onclick="changeZoom(-50)">🔎 -</button>
+    </div>
+
+    <div id="save-menu" class="save-menu">
+        <button class="top-btn" onclick="document.getElementById('save-upload').click()">📂 파일 업로드</button>
+        <button class="top-btn" onclick="downloadSaves()">💾 파일 다운로드</button>
+    </div>
+
+    <script>
+        const ENCODED_PW = "YWRtaW43Nzc=";
+        let dosInterface = null; 
+        let currentZoom = 100; 
+
+        function checkAccess() {
+            const isPassed = sessionStorage.getItem("is_passed");
+            const savedAdmin = sessionStorage.getItem("isAdmin");
+
+            if (isPassed === "true") {
+                showPage(savedAdmin === "true");
+                return;
+            }
+
+            const password = prompt("접속 암호를 입력하세요.");
+            if (password === "2026") {
+                sessionStorage.setItem("is_passed", "true");
+                sessionStorage.setItem("isAdmin", "false");
+                showPage(false);
+            } else if (btoa(password) === ENCODED_PW) { 
+                sessionStorage.setItem("is_passed", "true");
+                sessionStorage.setItem("isAdmin", "true");
+                showPage(true);
+            } else {
+                alert("암호가 틀렸습니다.");
+                location.reload();
+            }
+        }
+
+        function showPage(adminMode) {
+            document.getElementById("intro-layer").style.display = "flex";
+            if (adminMode) {
+                document.getElementById("admin-panel").style.display = "block";
+            }
+        }
+
+        async function launchGame() {
+            if (typeof gtag === 'function') {
+                gtag('event', 'play_game', {
+                    'event_category': 'Game',
+                    'event_label': 'Eiketsuden Start'
+                });
+            }
+
+            document.getElementById("intro-layer").style.display = "none";
+            document.getElementById("dos-wrapper").style.display = "block";
+            document.getElementById("top-bar").style.display = "flex";
+            
+            document.body.style.overflow = "hidden";
+
+            try {
+                Dos(document.getElementById("dos"), {
+                    url: "./nuasuw2.dat",
+                    noCloud: true,
+                    autoStart: true
+                }).then((ci) => {
+                    dosInterface = ci; 
+                    
+                    if (ci && typeof ci.persist === "function") {
+                        ci.persist("eiketsu-save-data");
+                    }
+                    ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
+                });
+            } catch (err) {
+                console.error("게임 실행 오류:", err);
+            }
+        }
+
+        function toggleSaveMenu() {
+            const menu = document.getElementById("save-menu");
+            const bar = document.getElementById("top-bar");
+            if (menu.style.display === "flex") {
+                menu.style.display = "none";
+                bar.classList.remove("active");
+            } else {
+                menu.style.display = "flex";
+                bar.classList.add("active");
+            }
+        }
+
+        function downloadSaves() {
+            if (!dosInterface) return alert("게임이 로드되지 않았습니다.");
+            
+            const fileName = prompt("다운로드할 세이브 파일명을 정확히 입력하세요.\n(영걸전 예시: SAVEDAT0.DAT, SAVEDAT1.DAT 등)", "SAVEDAT0.DAT");
+            if (!fileName) return;
+
+            try {
+                dosInterface.fs.readFile(fileName).then(data => {
+                    const blob = new Blob([data], { type: "application/octet-stream" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    alert(`[${fileName}] 다운로드가 완료되었습니다.`);
+                    toggleSaveMenu(); 
+                }).catch(e => {
+                    console.error(e);
+                    alert("세이브 파일을 찾을 수 없습니다. 파일명을 다시 확인해주세요.");
+                });
+            } catch (err) {
+                alert("지원되지 않는 버전의 js-dos이거나 내부 오류가 발생했습니다.");
+            }
+        }
+
+        function uploadSave(event) {
+            const file = event.target.files[0];
+            if (!file || !dosInterface) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                try {
+                    dosInterface.fs.writeFile(file.name, data).then(() => {
+                        alert(`[${file.name}] 업로드 완료!\n게임 내에서 해당 슬롯을 로드해 주세요.`);
+                        toggleSaveMenu(); 
+                    }).catch(err => {
+                        console.error(err);
+                        alert("파일 덮어쓰기 중 오류가 발생했습니다.");
+                    });
+                } catch(err) {
+                    alert("업로드 처리 중 오류가 발생했습니다.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = ""; 
+        }
+
+        function changeZoom(amount) {
+            currentZoom += amount;
+            if (currentZoom < 100) currentZoom = 100;
+            if (currentZoom > 300) currentZoom = 300;
+            
+            const dosEl = document.getElementById("dos");
+            const wrapper = document.getElementById("dos-wrapper");
+            
+            const centerX = wrapper.scrollLeft + wrapper.clientWidth / 2;
+            const centerY = wrapper.scrollTop + wrapper.clientHeight / 2;
+            
+            const oldWidth = dosEl.clientWidth || wrapper.clientWidth;
+            const oldHeight = dosEl.clientHeight || wrapper.clientHeight;
+
+            dosEl.style.width = currentZoom + "%";
+            dosEl.style.height = currentZoom + "%";
+            
+            setTimeout(() => {
+                const newWidth = dosEl.clientWidth;
+                const newHeight = dosEl.clientHeight;
+                
+                const ratioX = newWidth / oldWidth;
+                const ratioY = newHeight / oldHeight;
+                
+                wrapper.scrollLeft = centerX * ratioX - wrapper.clientWidth / 2;
+                wrapper.scrollTop = centerY * ratioY - wrapper.clientHeight / 2;
+            }, 50);
+        }
+
+        function forceEsc(e) {
+            if (e && e.cancelable) e.preventDefault();
+            if (dosInterface) {
+                try {
+                    if (typeof dosInterface.simulateKeyPress === 'function') {
+                        dosInterface.simulateKeyPress(27);
+                    }
+                } catch(err) {}
+            }
+            const evOpts = { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true };
+            document.dispatchEvent(new KeyboardEvent("keydown", evOpts));
+            setTimeout(() => document.dispatchEvent(new KeyboardEvent("keyup", evOpts)), 50);
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>삼국지 영걸전 아카이브</title>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PW92P22RPV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-PW92P22RPV', {
+          cookie_domain: 'dosgame.pages.dev'
+      });
+    </script>
+    <link rel="stylesheet" href="js-dos.css">
+    <script src="js-dos.js"></script>
+
+    <style>
         /* overflow: hidden; 속성을 제거하여 소개 화면에서 스크롤이 가능하도록 수정했습니다. */
         body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
         
