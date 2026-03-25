@@ -37,12 +37,10 @@
         .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
         
-        /* 새로 추가된 스타일: 인게임 플로팅 메뉴 (세이브 관리 및 게임패드 토글) */
         .game-menu { display: none; position: fixed; top: 15px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; }
         .game-btn { padding: 8px 12px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; }
         .game-btn:hover { background: rgba(183, 28, 28, 0.9); }
 
-        /* 새로 추가된 스타일: 모바일 가상 게임패드 */
         .gamepad { display: none; position: fixed; bottom: 30px; left: 0; right: 0; z-index: 2000; justify-content: space-between; padding: 0 20px; pointer-events: none; }
         .dpad { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px); gap: 5px; pointer-events: auto; }
         .dpad button, .action-keys button { background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%; color: white; font-size: 1.5rem; user-select: none; cursor: pointer; backdrop-filter: blur(2px); touch-action: none; }
@@ -99,20 +97,20 @@
 
     <div id="gamepad" class="gamepad">
         <div class="dpad">
-            <button class="up" onmousedown="pressKey(38, event)" onmouseup="releaseKey(38, event)" ontouchstart="pressKey(38, event)" ontouchend="releaseKey(38, event)">▲</button>
-            <button class="left" onmousedown="pressKey(37, event)" onmouseup="releaseKey(37, event)" ontouchstart="pressKey(37, event)" ontouchend="releaseKey(37, event)">◀</button>
-            <button class="right" onmousedown="pressKey(39, event)" onmouseup="releaseKey(39, event)" ontouchstart="pressKey(39, event)" ontouchend="releaseKey(39, event)">▶</button>
-            <button class="down" onmousedown="pressKey(40, event)" onmouseup="releaseKey(40, event)" ontouchstart="pressKey(40, event)" ontouchend="releaseKey(40, event)">▼</button>
+            <button class="up" onmousedown="pressKey(38, event)" onmouseup="releaseKey(38, event)" onmouseleave="releaseKey(38, event)" ontouchstart="pressKey(38, event)" ontouchend="releaseKey(38, event)" ontouchcancel="releaseKey(38, event)">▲</button>
+            <button class="left" onmousedown="pressKey(37, event)" onmouseup="releaseKey(37, event)" onmouseleave="releaseKey(37, event)" ontouchstart="pressKey(37, event)" ontouchend="releaseKey(37, event)" ontouchcancel="releaseKey(37, event)">◀</button>
+            <button class="right" onmousedown="pressKey(39, event)" onmouseup="releaseKey(39, event)" onmouseleave="releaseKey(39, event)" ontouchstart="pressKey(39, event)" ontouchend="releaseKey(39, event)" ontouchcancel="releaseKey(39, event)">▶</button>
+            <button class="down" onmousedown="pressKey(40, event)" onmouseup="releaseKey(40, event)" onmouseleave="releaseKey(40, event)" ontouchstart="pressKey(40, event)" ontouchend="releaseKey(40, event)" ontouchcancel="releaseKey(40, event)">▼</button>
         </div>
         <div class="action-keys">
-            <button onmousedown="pressKey(13, event)" onmouseup="releaseKey(13, event)" ontouchstart="pressKey(13, event)" ontouchend="releaseKey(13, event)">ENTER</button>
-            <button onmousedown="pressKey(27, event)" onmouseup="releaseKey(27, event)" ontouchstart="pressKey(27, event)" ontouchend="releaseKey(27, event)">ESC</button>
+            <button onmousedown="pressKey(13, event)" onmouseup="releaseKey(13, event)" onmouseleave="releaseKey(13, event)" ontouchstart="pressKey(13, event)" ontouchend="releaseKey(13, event)" ontouchcancel="releaseKey(13, event)">ENTER</button>
+            <button onmousedown="pressKey(27, event)" onmouseup="releaseKey(27, event)" onmouseleave="releaseKey(27, event)" ontouchstart="pressKey(27, event)" ontouchend="releaseKey(27, event)" ontouchcancel="releaseKey(27, event)">ESC</button>
         </div>
     </div>
 
     <script>
         const ENCODED_PW = "YWRtaW43Nzc=";
-        let dosInterface = null; // 새로 추가된 변수: js-dos 인터페이스 제어용
+        let dosInterface = null; 
 
         function checkAccess() {
             const isPassed = sessionStorage.getItem("is_passed");
@@ -146,7 +144,6 @@
         }
 
         async function launchGame() {
-            // 구글 애널리틱스로 '게임 플레이' 이벤트 전송
             if (typeof gtag === 'function') {
                 gtag('event', 'play_game', {
                     'event_category': 'Game',
@@ -158,7 +155,6 @@
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
             
-            // 게임 시작 시 우측 상단 메뉴 노출
             document.getElementById("game-menu").style.display = "flex";
 
             try {
@@ -167,7 +163,7 @@
                     noCloud: true,
                     autoStart: true
                 }).then((ci) => {
-                    dosInterface = ci; // 추가: 외부에서 접근할 수 있도록 객체 저장
+                    dosInterface = ci; 
                     
                     if (ci && typeof ci.persist === "function") {
                         ci.persist("eiketsu-save-data");
@@ -179,9 +175,6 @@
             }
         }
 
-        // --- 새로 추가된 세이브 및 게임패드 관련 함수 ---
-
-        // 세이브 파일 다운로드
         function downloadSaves() {
             if (!dosInterface) return alert("게임이 로드되지 않았습니다.");
             
@@ -189,7 +182,6 @@
             if (!fileName) return;
 
             try {
-                // js-dos 내부 파일 시스템에서 해당 파일 읽기 시도
                 dosInterface.fs.readFile(fileName).then(data => {
                     const blob = new Blob([data], { type: "application/octet-stream" });
                     const url = URL.createObjectURL(blob);
@@ -208,7 +200,6 @@
             }
         }
 
-        // 세이브 파일 업로드
         function uploadSave(event) {
             const file = event.target.files[0];
             if (!file || !dosInterface) return;
@@ -228,32 +219,59 @@
                 }
             };
             reader.readAsArrayBuffer(file);
-            event.target.value = ""; // 동일 파일 연속 업로드 가능하게 초기화
+            event.target.value = ""; 
         }
 
-        // 가상 게임패드 토글
         function toggleGamepad() {
             const pad = document.getElementById("gamepad");
             pad.style.display = (pad.style.display === "flex") ? "none" : "flex";
         }
 
-        // 키 입력 처리
+        // 브라우저 기본 이벤트를 강제로 발생시켜 js-dos가 무조건 인식하도록 수정된 키 입력 함수
         function pressKey(code, e) {
-            if(e) e.preventDefault(); // 모바일 환경 롱터치 및 스크롤 방지
-            if (!dosInterface) return;
-            if (typeof dosInterface.sendKeyEvent === "function") {
-                dosInterface.sendKeyEvent(code, true);
-            } else if (typeof dosInterface.simulateKeyPress === "function") {
-                dosInterface.simulateKeyPress(code);
+            if(e && e.cancelable) e.preventDefault(); 
+            
+            // 1. 기존 js-dos 내부 API 방식 시도
+            if (dosInterface) {
+                if (typeof dosInterface.sendKeyEvent === "function") {
+                    dosInterface.sendKeyEvent(code, true);
+                } else if (typeof dosInterface.simulateKeyPress === "function") {
+                    dosInterface.simulateKeyPress(code);
+                }
             }
+
+            // 2. 강제 키보드 이벤트 발생 (호환성 보장)
+            const event = new KeyboardEvent("keydown", {
+                keyCode: code,
+                which: code,
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(event);
+            
+            const canvas = document.querySelector('#dos canvas');
+            if (canvas) canvas.dispatchEvent(event);
         }
 
         function releaseKey(code, e) {
-            if(e) e.preventDefault();
-            if (!dosInterface) return;
-            if (typeof dosInterface.sendKeyEvent === "function") {
-                dosInterface.sendKeyEvent(code, false);
+            if(e && e.cancelable) e.preventDefault();
+            
+            if (dosInterface) {
+                if (typeof dosInterface.sendKeyEvent === "function") {
+                    dosInterface.sendKeyEvent(code, false);
+                }
             }
+
+            const event = new KeyboardEvent("keyup", {
+                keyCode: code,
+                which: code,
+                bubbles: true,
+                cancelable: true
+            });
+            document.dispatchEvent(event);
+            
+            const canvas = document.querySelector('#dos canvas');
+            if (canvas) canvas.dispatchEvent(event);
         }
     </script>
 </body>
