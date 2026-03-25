@@ -19,7 +19,7 @@
     <script src="js-dos.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
         .intro-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
         .intro-content { width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 40px; box-sizing: border-box; }
         .game-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
@@ -36,6 +36,28 @@
         .copyright-section { padding: 20px 0; font-size: 0.8rem; color: #888; line-height: 1.6; width: 100%; max-width: 500px; margin-top: auto; }
         .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
         #dos { width: 100vw; height: 100vh; display: none; position: fixed; inset: 0; background: #000; z-index: 1000; }
+        
+        /* 새로 추가된 스타일: 인게임 플로팅 메뉴 (세이브 관리 및 게임패드 토글) */
+        .game-menu { display: none; position: fixed; top: 15px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; }
+        .game-btn { padding: 8px 12px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; }
+        .game-btn:hover { background: rgba(183, 28, 28, 0.9); }
+
+        /* 새로 추가된 스타일: 모바일 가상 게임패드 */
+        .gamepad { display: none; position: fixed; bottom: 30px; left: 0; right: 0; z-index: 2000; justify-content: space-between; padding: 0 20px; pointer-events: none; }
+        .dpad { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px); gap: 5px; pointer-events: auto; }
+        .dpad button, .action-keys button { background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%; color: white; font-size: 1.5rem; user-select: none; cursor: pointer; backdrop-filter: blur(2px); touch-action: none; }
+        .dpad button:active, .action-keys button:active { background: rgba(255, 255, 255, 0.6); }
+        .dpad .up { grid-column: 2; grid-row: 1; }
+        .dpad .left { grid-column: 1; grid-row: 2; }
+        .dpad .right { grid-column: 3; grid-row: 2; }
+        .dpad .down { grid-column: 2; grid-row: 3; }
+        .action-keys { display: flex; gap: 15px; align-items: flex-end; pointer-events: auto; }
+        .action-keys button { width: 70px; height: 70px; font-size: 1rem; font-weight: bold; border-radius: 15px; }
+        
+        @media (max-width: 768px) {
+            .dpad { grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); }
+            .action-keys button { width: 60px; height: 60px; }
+        }
     </style>
 </head>
 <body onload="checkAccess()">
@@ -67,8 +89,30 @@
 
     <div id="dos"></div>
 
+    <input type="file" id="save-upload" style="display: none;" onchange="uploadSave(event)">
+
+    <div id="game-menu" class="game-menu">
+        <button class="game-btn" onclick="document.getElementById('save-upload').click()">📂 세이브 업로드</button>
+        <button class="game-btn" onclick="downloadSaves()">💾 세이브 다운로드</button>
+        <button class="game-btn" onclick="toggleGamepad()">🎮 모바일 키패드</button>
+    </div>
+
+    <div id="gamepad" class="gamepad">
+        <div class="dpad">
+            <button class="up" onmousedown="pressKey(38, event)" onmouseup="releaseKey(38, event)" ontouchstart="pressKey(38, event)" ontouchend="releaseKey(38, event)">▲</button>
+            <button class="left" onmousedown="pressKey(37, event)" onmouseup="releaseKey(37, event)" ontouchstart="pressKey(37, event)" ontouchend="releaseKey(37, event)">◀</button>
+            <button class="right" onmousedown="pressKey(39, event)" onmouseup="releaseKey(39, event)" ontouchstart="pressKey(39, event)" ontouchend="releaseKey(39, event)">▶</button>
+            <button class="down" onmousedown="pressKey(40, event)" onmouseup="releaseKey(40, event)" ontouchstart="pressKey(40, event)" ontouchend="releaseKey(40, event)">▼</button>
+        </div>
+        <div class="action-keys">
+            <button onmousedown="pressKey(13, event)" onmouseup="releaseKey(13, event)" ontouchstart="pressKey(13, event)" ontouchend="releaseKey(13, event)">ENTER</button>
+            <button onmousedown="pressKey(27, event)" onmouseup="releaseKey(27, event)" ontouchstart="pressKey(27, event)" ontouchend="releaseKey(27, event)">ESC</button>
+        </div>
+    </div>
+
     <script>
         const ENCODED_PW = "YWRtaW43Nzc=";
+        let dosInterface = null; // 새로 추가된 변수: js-dos 인터페이스 제어용
 
         function checkAccess() {
             const isPassed = sessionStorage.getItem("is_passed");
@@ -113,6 +157,9 @@
 
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos").style.display = "block";
+            
+            // 게임 시작 시 우측 상단 메뉴 노출
+            document.getElementById("game-menu").style.display = "flex";
 
             try {
                 Dos(document.getElementById("dos"), {
@@ -120,6 +167,8 @@
                     noCloud: true,
                     autoStart: true
                 }).then((ci) => {
+                    dosInterface = ci; // 추가: 외부에서 접근할 수 있도록 객체 저장
+                    
                     if (ci && typeof ci.persist === "function") {
                         ci.persist("eiketsu-save-data");
                     }
@@ -127,6 +176,83 @@
                 });
             } catch (err) {
                 console.error("게임 실행 오류:", err);
+            }
+        }
+
+        // --- 새로 추가된 세이브 및 게임패드 관련 함수 ---
+
+        // 세이브 파일 다운로드
+        function downloadSaves() {
+            if (!dosInterface) return alert("게임이 로드되지 않았습니다.");
+            
+            const fileName = prompt("다운로드할 세이브 파일명을 정확히 입력하세요.\n(영걸전 예시: SAVEDAT0.DAT, SAVEDAT1.DAT 등)", "SAVEDAT0.DAT");
+            if (!fileName) return;
+
+            try {
+                // js-dos 내부 파일 시스템에서 해당 파일 읽기 시도
+                dosInterface.fs.readFile(fileName).then(data => {
+                    const blob = new Blob([data], { type: "application/octet-stream" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    alert(`[${fileName}] 다운로드가 완료되었습니다.`);
+                }).catch(e => {
+                    console.error(e);
+                    alert("세이브 파일을 찾을 수 없습니다. 파일명을 다시 확인해주세요.");
+                });
+            } catch (err) {
+                alert("지원되지 않는 버전의 js-dos이거나 내부 오류가 발생했습니다.");
+            }
+        }
+
+        // 세이브 파일 업로드
+        function uploadSave(event) {
+            const file = event.target.files[0];
+            if (!file || !dosInterface) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                try {
+                    dosInterface.fs.writeFile(file.name, data).then(() => {
+                        alert(`[${file.name}] 업로드 완료!\n게임 내에서 해당 슬롯을 로드해 주세요.`);
+                    }).catch(err => {
+                        console.error(err);
+                        alert("파일 덮어쓰기 중 오류가 발생했습니다.");
+                    });
+                } catch(err) {
+                    alert("업로드 처리 중 오류가 발생했습니다.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = ""; // 동일 파일 연속 업로드 가능하게 초기화
+        }
+
+        // 가상 게임패드 토글
+        function toggleGamepad() {
+            const pad = document.getElementById("gamepad");
+            pad.style.display = (pad.style.display === "flex") ? "none" : "flex";
+        }
+
+        // 키 입력 처리
+        function pressKey(code, e) {
+            if(e) e.preventDefault(); // 모바일 환경 롱터치 및 스크롤 방지
+            if (!dosInterface) return;
+            if (typeof dosInterface.sendKeyEvent === "function") {
+                dosInterface.sendKeyEvent(code, true);
+            } else if (typeof dosInterface.simulateKeyPress === "function") {
+                dosInterface.simulateKeyPress(code);
+            }
+        }
+
+        function releaseKey(code, e) {
+            if(e) e.preventDefault();
+            if (!dosInterface) return;
+            if (typeof dosInterface.sendKeyEvent === "function") {
+                dosInterface.sendKeyEvent(code, false);
             }
         }
     </script>
