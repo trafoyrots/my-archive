@@ -19,7 +19,9 @@
     <script src="js-dos.js"></script>
 
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; overflow: hidden; }
+        /* overflow: hidden; 속성을 제거하여 소개 화면에서 스크롤이 가능하도록 수정했습니다. */
+        body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
+        
         .intro-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
         .intro-content { width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 40px; box-sizing: border-box; }
         .game-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
@@ -29,7 +31,6 @@
         .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
         .start-btn:hover { background: #b71c1c; }
         
-        /* 모바일 우클릭 불가 안내 문구 스타일 */
         .mobile-warning { font-size: 0.85rem; color: #d32f2f; margin-top: 15px; margin-bottom: 0; font-weight: bold; }
 
         #admin-panel { margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; font-size: 0.9rem; color: #1d39c4; display: none; text-align: center; line-height: 1.6; }
@@ -148,6 +149,9 @@
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos-wrapper").style.display = "block";
             document.getElementById("top-bar").style.display = "flex";
+            
+            // 게임 실행 시에만 화면 스크롤을 막아 게임 중 흔들림을 방지합니다.
+            document.body.style.overflow = "hidden";
 
             try {
                 Dos(document.getElementById("dos"), {
