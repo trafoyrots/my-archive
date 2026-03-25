@@ -28,6 +28,9 @@
         
         .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
         .start-btn:hover { background: #b71c1c; }
+        
+        /* 모바일 우클릭 불가 안내 문구 스타일 */
+        .mobile-warning { font-size: 0.85rem; color: #d32f2f; margin-top: 15px; margin-bottom: 0; font-weight: bold; }
 
         #admin-panel { margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; font-size: 0.9rem; color: #1d39c4; display: none; text-align: center; line-height: 1.6; }
         .ga-btn { display: inline-block; margin-top: 15px; padding: 10px 20px; background: #1d39c4; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: background 0.3s; }
@@ -36,11 +39,9 @@
         .copyright-section { padding: 20px 0; font-size: 0.8rem; color: #888; line-height: 1.6; width: 100%; max-width: 500px; margin-top: auto; }
         .copyright-section hr { width: 40px; border: 0; border-top: 1px solid #ccc; margin: 15px auto; }
         
-        /* 거추장스러운 하단 키패드를 완전히 없애고 100% 풀스크린 적용 */
         #dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; overflow: auto; -webkit-overflow-scrolling: touch; }
         #dos { width: 100%; height: 100%; transform-origin: top left; }
         
-        /* 상단 플로팅 메뉴 디자인 유지 */
         .top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; align-items: center; }
         .top-bar:hover, .top-bar:active, .top-bar.active { opacity: 1; background: rgba(0,0,0,0.6); }
         .top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; transition: background 0.2s; white-space: nowrap; }
@@ -63,6 +64,7 @@
             <p>비영리 목적으로 운영되는 팬 메이드 페이지입니다.</p>
             
             <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
+            <p class="mobile-warning">모바일은 우클릭 사용이 불가하니 PC를 사용하세요.</p>
 
             <div id="admin-panel">
                 <strong>📊 관리자 통계 모드 활성화</strong><br><br>
@@ -89,7 +91,6 @@
 
     <div id="top-bar" class="top-bar">
         <button class="top-btn" onclick="toggleSaveMenu()">💾 세이브</button>
-        <button id="rc-btn" class="top-btn" onclick="toggleRC()">🖱 우클릭 모드 [OFF]</button>
         <button class="top-btn" onmousedown="forceEsc(event)" ontouchstart="forceEsc(event)">⌨️ ESC</button>
         <button class="top-btn" onclick="changeZoom(50)">🔍 +</button>
         <button class="top-btn" onclick="changeZoom(-50)">🔎 -</button>
@@ -269,67 +270,6 @@
             document.dispatchEvent(new KeyboardEvent("keydown", evOpts));
             setTimeout(() => document.dispatchEvent(new KeyboardEvent("keyup", evOpts)), 50);
         }
-
-        // ==========================================
-        // 혁신적인 "우클릭 장전" 모드 (엔진 터치 제어 탈취)
-        // ==========================================
-        let rcMode = false;
-        function toggleRC() {
-            rcMode = !rcMode;
-            const btn = document.getElementById('rc-btn');
-            if (rcMode) {
-                btn.style.backgroundColor = '#b71c1c';
-                btn.innerText = '🖱 우클릭 장전됨 [ON]';
-            } else {
-                btn.style.backgroundColor = 'rgba(44, 62, 80, 0.8)';
-                btn.innerText = '🖱 우클릭 모드 [OFF]';
-            }
-        }
-
-        // 모바일 터치 이벤트를 에뮬레이터가 눈치채기 전에 가로채서 순수한 우클릭 마우스 신호로 변조하여 꽂아넣습니다.
-        window.addEventListener('touchstart', function(e) {
-            if (rcMode && e.target.tagName === 'CANVAS') {
-                e.stopPropagation(); // 에뮬레이터의 좌클릭 인식 차단
-                e.preventDefault();
-                const touch = e.touches[0];
-                e.target.dispatchEvent(new MouseEvent('mousedown', {
-                    bubbles: true, cancelable: true, view: window,
-                    clientX: touch.clientX, clientY: touch.clientY,
-                    screenX: touch.screenX, screenY: touch.screenY,
-                    button: 2, buttons: 2
-                }));
-            }
-        }, { capture: true, passive: false });
-
-        window.addEventListener('touchend', function(e) {
-            if (rcMode && e.target.tagName === 'CANVAS') {
-                e.stopPropagation();
-                e.preventDefault();
-                const touch = e.changedTouches[0];
-                e.target.dispatchEvent(new MouseEvent('mouseup', {
-                    bubbles: true, cancelable: true, view: window,
-                    clientX: touch.clientX, clientY: touch.clientY,
-                    screenX: touch.screenX, screenY: touch.screenY,
-                    button: 2, buttons: 0
-                }));
-                // 우클릭을 1회 사용했으므로 자동으로 모드를 꺼서 다시 평소(좌클릭) 상태로 돌려놓습니다.
-                toggleRC();
-            }
-        }, { capture: true, passive: false });
-
-        window.addEventListener('touchmove', function(e) {
-            if (rcMode && e.target.tagName === 'CANVAS') {
-                e.stopPropagation();
-                e.preventDefault();
-                const touch = e.touches[0];
-                e.target.dispatchEvent(new MouseEvent('mousemove', {
-                    bubbles: true, cancelable: true, view: window,
-                    clientX: touch.clientX, clientY: touch.clientY,
-                    screenX: touch.screenX, screenY: touch.screenY,
-                    button: 2, buttons: 2
-                }));
-            }
-        }, { capture: true, passive: false });
     </script>
 </body>
 </html>
