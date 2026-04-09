@@ -27,11 +27,30 @@
         h1 { font-size: 2rem; color: #2c3e50; margin: 0 0 15px 0; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
         p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
         
-        .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
+        /* 메인 시작 버튼 */
+        .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-bottom: 12px; }
         .start-btn:hover { background: #b71c1c; }
         
-        .download-link { display: inline-block; margin-top: 12px; font-size: 0.85rem; color: #7f8c8d; text-decoration: none; border-bottom: 1px solid #bdc3c7; transition: color 0.2s; }
-        .download-link:hover { color: #2c3e50; border-bottom-color: #2c3e50; }
+        /* 수정된 다운로드 버튼 스타일 */
+        .download-link { 
+            display: block; 
+            width: 100%; 
+            padding: 15px 0; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            background: #ffffff; 
+            border: 2px solid #2c3e50; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            transition: all 0.3s; 
+            box-sizing: border-box;
+        }
+        .download-link:hover { 
+            background: #f1f2f6; 
+            color: #b71c1c;
+            border-color: #b71c1c;
+        }
 
         .mobile-warning { font-size: 0.85rem; color: #d32f2f; margin-top: 15px; margin-bottom: 0; font-weight: bold; }
 
@@ -67,7 +86,7 @@
             <p>비영리 목적으로 운영되는 팬 메이드 페이지입니다.</p>
             
             <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
-            <a href="hero.zip" class="download-link" download onclick="trackDownload()">게임 내려받기 - 무단 배포 및 상업적 이용을 금합니다.</a>
+            <a href="hero.zip" class="download-link" download onclick="trackDownload()">💾 게임 파일 내려받기</a>
 
             <p class="mobile-warning">모바일은 우클릭 사용이 불가하니 PC를 사용하세요.</p>
 
