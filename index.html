@@ -12,9 +12,9 @@
       gtag('js', new Date());
       gtag('config', 'G-PW92P22RPV', { cookie_domain: 'dosgame.pages.dev' });
     </script>
-
-    <link rel="stylesheet" href="https://v7.js-dos.com/latest/js-dos.css">
-    <script src="https://v7.js-dos.com/latest/js-dos.js"></script>
+    
+    <link rel="stylesheet" href="js-dos.css">
+    <script src="js-dos.js"></script>
 
     <style>
         body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
@@ -25,10 +25,6 @@
         p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
         .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-bottom: 12px; }
         .start-btn:hover { background: #b71c1c; }
-        .download-link { display: block; width: 100%; padding: 15px 0; font-size: 1rem; font-weight: bold; color: #2c3e50; background: #ffffff; border: 2px solid #2c3e50; border-radius: 8px; text-decoration: none; transition: all 0.3s; box-sizing: border-box; }
-        .download-link:hover { background: #f1f2f6; color: #b71c1c; border-color: #b71c1c; }
-        #admin-panel { margin-top: 20px; padding: 15px; background: #f0f7ff; border: 1px solid #adc6ff; border-radius: 10px; font-size: 0.9rem; color: #1d39c4; display: none; text-align: center; }
-        .ga-btn { display: inline-block; margin-top: 15px; padding: 10px 20px; background: #1d39c4; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
         #dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; overflow: auto; }
         #dos { width: 100%; height: 100%; transform-origin: top left; }
         .top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; }
@@ -43,13 +39,9 @@
         <div class="intro-content">
             <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
             <h1>삼국지 영걸전</h1>
-            <p>원 게임의 저작권은 KOEI에 있습니다.</p>
+            <p>원본 저작권은 KOEI에 있습니다.</p>
             <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
-            <a href="hero.zip" class="download-link" download>💾 게임 파일 내려받기</a>
-            <div id="admin-panel">
-                <strong>📊 관리자 모드</strong><br>
-                <a href="https://analytics.google.com/" target="_blank" class="ga-btn">구글 통계</a>
-            </div>
+            <a href="hero.zip" style="text-decoration:none; color:#2c3e50; font-weight:bold;">💾 게임 파일 내려받기</a>
         </div>
     </div>
 
@@ -76,70 +68,87 @@
 
         function checkAccess() {
             if (sessionStorage.getItem("is_passed") === "true") {
-                showPage(sessionStorage.getItem("isAdmin") === "true");
+                showPage();
                 return;
             }
             const password = prompt("접속 암호를 입력하세요.");
             if (password === "2026" || btoa(password) === ENCODED_PW) {
-                const isAdmin = btoa(password) === ENCODED_PW;
                 sessionStorage.setItem("is_passed", "true");
-                sessionStorage.setItem("isAdmin", isAdmin);
-                showPage(isAdmin);
+                showPage();
             } else {
                 alert("암호가 틀렸습니다.");
                 location.reload();
             }
         }
 
-        function showPage(adminMode) {
+        function showPage() {
             document.getElementById("intro-layer").style.display = "flex";
-            if (adminMode) document.getElementById("admin-panel").style.display = "block";
         }
 
-        function launchGame() {
+        async function launchGame() {
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos-wrapper").style.display = "block";
             document.getElementById("top-bar").style.display = "flex";
 
-            // v7 최적화 실행 로직
-            Dos(document.getElementById("dos"))
-                .run("./nuasuw2.dat")
-                .then(ci => {
-                    dosInterface = ci;
-                    console.log("v7 Engine Ready");
+            try {
+                // v8 방식의 초기화
+                Dos(document.getElementById("dos"), {
+                    url: "./nuasuw2.dat",
+                    autoStart: true,
+                    onEvent: (event, ci) => {
+                        if (event === "ci-ready") {
+                            dosInterface = ci;
+                            console.log("v8 인터페이스 준비 완료");
+                        }
+                    }
                 });
+            } catch (err) {
+                console.error("실행 오류:", err);
+            }
         }
 
-        function downloadSaves() {
-            if (!dosInterface) return;
-            const fileName = prompt("파일명 입력", "SAVEDAT0.DAT");
+        async function downloadSaves() {
+            if (!dosInterface) return alert("게임이 아직 로드되지 않았습니다.");
+            
+            const fileName = prompt("다운로드할 세이브 파일명(대소문자 구분)", "SAVEDAT0.DAT");
             if (!fileName) return;
 
-            dosInterface.layers.save().then(fs => {
-                fs.readFile(fileName).then(data => {
-                    const blob = new Blob([data], { type: "application/octet-stream" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = fileName;
-                    a.click();
-                }).catch(() => alert("파일을 찾을 수 없습니다."));
-            });
+            try {
+                // v8 전용: ci에서 직접 fsGetFilePromise 호출
+                const data = await dosInterface.fsGetFilePromise(fileName);
+                if (!data) throw new Error();
+
+                const blob = new Blob([data], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert("파일을 찾을 수 없습니다. 게임 내에서 세이브를 먼저 진행하세요.");
+            }
         }
 
-        function uploadSave(event) {
+        async function uploadSave(event) {
             const file = event.target.files[0];
             if (!file || !dosInterface) return;
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const data = new Uint8Array(e.target.result);
-                dosInterface.layers.save().then(fs => {
-                    fs.writeFile(file.name, data).then(() => {
+                try {
+                    // v8 업로드: transport 계층을 통한 파일 주입 시도
+                    if (dosInterface.transport && dosInterface.transport.module && dosInterface.transport.module.FS) {
+                        dosInterface.transport.module.FS.writeFile(file.name, data);
                         alert("업로드 완료! 게임에서 로드하세요.");
-                        toggleSaveMenu();
-                    });
-                });
+                    } else {
+                        alert("현재 환경에서 업로드가 지원되지 않습니다.");
+                    }
+                    toggleSaveMenu();
+                } catch (err) {
+                    alert("업로드 중 오류 발생");
+                }
             };
             reader.readAsArrayBuffer(file);
         }
@@ -157,7 +166,9 @@
         }
 
         function forceEsc() {
-            if (dosInterface) dosInterface.simulateKeyPress(27);
+            if (dosInterface && typeof dosInterface.simulateKeyPress === 'function') {
+                dosInterface.simulateKeyPress(27);
+            }
         }
     </script>
 </body>
