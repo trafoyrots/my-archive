@@ -27,11 +27,9 @@
         h1 { font-size: 2rem; color: #2c3e50; margin: 0 0 15px 0; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
         p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
         
-        /* 메인 시작 버튼 */
         .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-bottom: 12px; }
         .start-btn:hover { background: #b71c1c; }
         
-        /* 다운로드 버튼 스타일 */
         .download-link { 
             display: block; 
             width: 100%; 
@@ -127,8 +125,9 @@
 
     <script>
         const ENCODED_PW = "YWRtaW43Nzc=";
-        let dosInterface = null; 
-        let currentZoom = 100; 
+        let dosInterface = null;
+        let currentZoom = 100;
+        let dosReady = false; // FS 준비 완료 플래그
 
         function checkAccess() {
             const isPassed = sessionStorage.getItem("is_passed");
@@ -144,7 +143,7 @@
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "false");
                 showPage(false);
-            } else if (btoa(password) === ENCODED_PW) { 
+            } else if (btoa(password) === ENCODED_PW) {
                 sessionStorage.setItem("is_passed", "true");
                 sessionStorage.setItem("isAdmin", "true");
                 showPage(true);
@@ -172,8 +171,10 @@
             document.getElementById("intro-layer").style.display = "none";
             document.getElementById("dos-wrapper").style.display = "block";
             document.getElementById("top-bar").style.display = "flex";
-            
             document.body.style.overflow = "hidden";
+
+            dosReady = false;
+            dosInterface = null;
 
             try {
                 Dos(document.getElementById("dos"), {
@@ -181,20 +182,21 @@
                     noCloud: true,
                     autoStart: true
                 }).then((ci) => {
-                    // 인터페이스 할당
-                    dosInterface = ci; 
-                    
+                    dosInterface = ci;
+
                     if (ci && typeof ci.persist === "function") {
                         ci.persist("eiketsu-save-data");
                     }
-                    
-                    // 실행 커맨드 보존 및 예외 방어
+
                     const mainCmd = ["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"];
                     if (ci.dos && typeof ci.dos.main === "function") {
                         ci.dos.main(mainCmd);
                     } else if (typeof ci.main === "function") {
                         ci.main(mainCmd);
                     }
+
+                    // FS 준비 완료 표시 (인터페이스 할당 직후)
+                    dosReady = true;
                 });
             } catch (err) {
                 console.error("게임 실행 오류:", err);
@@ -223,83 +225,98 @@
             }
         }
 
-        // 파일 시스템(FS) 객체를 안전하게 찾는 헬퍼 함수
+        // 여러 버전의 js-dos FS 경로를 순서대로 시도
         function getFS() {
             if (!dosInterface) return null;
-            return dosInterface.fs || (dosInterface.dos && dosInterface.dos.fs) || null;
+            return dosInterface.fs
+                || (dosInterface.dos && dosInterface.dos.fs)
+                || (dosInterface.layers && dosInterface.layers.fs)
+                || (dosInterface.jsdos && dosInterface.jsdos.fs)
+                || null;
+        }
+
+        // FS가 준비될 때까지 폴링 후 콜백 실행
+        function waitForDos(callback, maxTries = 20) {
+            let tries = 0;
+            const interval = setInterval(() => {
+                const fs = getFS();
+                if (fs) {
+                    clearInterval(interval);
+                    callback(fs);
+                } else if (++tries >= maxTries) {
+                    clearInterval(interval);
+                    alert("게임 인터페이스를 찾을 수 없습니다.\n게임이 완전히 실행된 후 다시 시도해주세요.");
+                }
+            }, 500);
         }
 
         function downloadSaves() {
-            const fs = getFS();
-            if (!fs) {
-                alert("게임 인터페이스를 로드하는 중입니다. 잠시 후 다시 시도해주세요.");
-                return;
-            }
-            
-            const fileName = prompt("다운로드할 세이브 파일명을 입력하세요.\n(예: SAVEDAT0.DAT)", "SAVEDAT0.DAT");
-            if (!fileName) return;
+            waitForDos((fs) => {
+                const fileName = prompt("다운로드할 세이브 파일명을 입력하세요.\n(예: SAVEDAT0.DAT)", "SAVEDAT0.DAT");
+                if (!fileName) return;
 
-            fs.readFile(fileName).then(data => {
-                const blob = new Blob([data], { type: "application/octet-stream" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = fileName;
-                a.click();
-                URL.revokeObjectURL(url);
-                alert(`[${fileName}] 다운로드 완료!`);
-                toggleSaveMenu(); 
-            }).catch(e => {
-                alert("파일을 찾을 수 없습니다. 게임 내에서 먼저 세이브를 해주세요.");
+                fs.readFile(fileName)
+                    .then(data => {
+                        const blob = new Blob([data], { type: "application/octet-stream" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = fileName;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        alert(`[${fileName}] 다운로드 완료!`);
+                        toggleSaveMenu();
+                    })
+                    .catch(() => {
+                        alert("파일을 찾을 수 없습니다.\n게임 내에서 먼저 세이브를 해주세요.");
+                    });
             });
         }
 
         function uploadSave(event) {
             const file = event.target.files[0];
-            const fs = getFS();
-            if (!file || !fs) {
-                alert("파일을 선택하지 않았거나 게임이 로드되지 않았습니다.");
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                fs.writeFile(file.name, data).then(() => {
-                    alert(`[${file.name}] 업로드 완료! 게임에서 로드하세요.`);
-                    toggleSaveMenu(); 
-                }).catch(err => {
-                    alert("업로드 중 오류가 발생했습니다.");
-                });
-            };
-            reader.readAsArrayBuffer(file);
-            event.target.value = ""; 
+            if (!file) return;
+
+            waitForDos((fs) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    fs.writeFile(file.name, data)
+                        .then(() => {
+                            alert(`[${file.name}] 업로드 완료! 게임에서 로드하세요.`);
+                            toggleSaveMenu();
+                        })
+                        .catch(() => alert("업로드 중 오류가 발생했습니다."));
+                };
+                reader.readAsArrayBuffer(file);
+                event.target.value = "";
+            });
         }
 
         function changeZoom(amount) {
             currentZoom += amount;
             if (currentZoom < 100) currentZoom = 100;
             if (currentZoom > 300) currentZoom = 300;
-            
+
             const dosEl = document.getElementById("dos");
             const wrapper = document.getElementById("dos-wrapper");
-            
+
             const centerX = wrapper.scrollLeft + wrapper.clientWidth / 2;
             const centerY = wrapper.scrollTop + wrapper.clientHeight / 2;
-            
+
             const oldWidth = dosEl.clientWidth || wrapper.clientWidth;
             const oldHeight = dosEl.clientHeight || wrapper.clientHeight;
 
             dosEl.style.width = currentZoom + "%";
             dosEl.style.height = currentZoom + "%";
-            
+
             setTimeout(() => {
                 const newWidth = dosEl.clientWidth;
                 const newHeight = dosEl.clientHeight;
-                
+
                 const ratioX = newWidth / oldWidth;
                 const ratioY = newHeight / oldHeight;
-                
+
                 wrapper.scrollLeft = centerX * ratioX - wrapper.clientWidth / 2;
                 wrapper.scrollTop = centerY * ratioY - wrapper.clientHeight / 2;
             }, 50);
