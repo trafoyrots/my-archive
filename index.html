@@ -161,28 +161,22 @@
             dosInterface = null;
 
             try {
+                // v8 방식: Dos() 함수는 Promise를 반환하지 않고 객체를 반환할 수 있음
                 const ciPromise = Dos(document.getElementById("dos"), {
                     url: "./nuasuw2.dat",
                     noCloud: true,
                     autoStart: true,
                     onEvent: (event, ci) => {
-                        // v8: ci-ready 이벤트로 인터페이스 수신
                         if (event === "ci-ready") {
                             dosInterface = ci;
-                            console.log("=== ci-ready 이벤트 수신, dosInterface 설정됨 ===");
-                            console.log("ci 키 목록:", Object.keys(ci || {}));
+                            console.log("=== ci-ready 수신 완료 ===");
                         }
                     }
                 });
 
-                // v7 이하 호환: Promise 반환 시 대비
                 if (ciPromise && typeof ciPromise.then === "function") {
                     ciPromise.then((ci) => {
-                        if (ci && !dosInterface) {
-                            dosInterface = ci;
-                            console.log("=== then() 방식으로 ci 수신 ===");
-                            console.log("ci 키 목록:", Object.keys(ci || {}));
-                        }
+                        if (ci && !dosInterface) dosInterface = ci;
                     });
                 }
 
@@ -213,78 +207,83 @@
             }
         }
 
-        // v8 포함 다양한 경로 시도
-        function getFS() {
+        // v8에서 파일 시스템 함수를 안전하게 가져오는 유틸리티
+        async function getV8File(fileName) {
             if (!dosInterface) return null;
-            return dosInterface.fs
-                || dosInterface.emu?.fs
-                || dosInterface.ci?.fs
-                || (dosInterface.dos && dosInterface.dos.fs)
-                || (dosInterface.layers && dosInterface.layers.fs)
-                || null;
+            // v8은 직접 ci 객체에 fsGetFilePromise가 있음
+            if (typeof dosInterface.fsGetFilePromise === 'function') {
+                return await dosInterface.fsGetFilePromise(fileName);
+            }
+            // 하위 호환성 (v7 등)
+            const fs = dosInterface.fs || dosInterface.emu?.fs;
+            if (fs && typeof fs.readFile === 'function') {
+                return await fs.readFile(fileName);
+            }
+            return null;
         }
 
-        // FS 준비될 때까지 폴링 후 콜백 실행
-        function waitForDos(callback, maxTries = 30) {
-            let tries = 0;
-            const interval = setInterval(() => {
-                const fs = getFS();
-                if (fs) {
-                    clearInterval(interval);
-                    callback(fs);
-                } else if (++tries >= maxTries) {
-                    clearInterval(interval);
-                    // dosInterface 상태 디버그 출력
-                    console.log("dosInterface 현재 상태:", dosInterface);
-                    if (dosInterface) {
-                        console.log("dosInterface 키 목록:", Object.keys(dosInterface));
-                    }
-                    alert("게임 인터페이스를 찾을 수 없습니다.\n게임이 완전히 실행된 후 다시 시도하거나,\n개발자 도구 Console의 로그를 확인해주세요.");
-                }
-            }, 500);
+        async function downloadSaves() {
+            if (!dosInterface) {
+                alert("게임이 아직 준비되지 않았습니다.");
+                return;
+            }
+
+            const fileName = prompt("다운로드할 세이브 파일명을 입력하세요.\n(예: SAVEDAT0.DAT)", "SAVEDAT0.DAT");
+            if (!fileName) return;
+
+            try {
+                const data = await getV8File(fileName);
+                if (!data || data.length === 0) throw new Error("File not found");
+
+                const blob = new Blob([data], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+                alert(`[${fileName}] 다운로드 완료!`);
+                toggleSaveMenu();
+            } catch (err) {
+                alert("파일을 찾을 수 없습니다. 게임 내에서 먼저 세이브를 해주세요.");
+            }
         }
 
-        function downloadSaves() {
-            waitForDos((fs) => {
-                const fileName = prompt("다운로드할 세이브 파일명을 입력하세요.\n(예: SAVEDAT0.DAT)", "SAVEDAT0.DAT");
-                if (!fileName) return;
-
-                fs.readFile(fileName)
-                    .then(data => {
-                        const blob = new Blob([data], { type: "application/octet-stream" });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = fileName;
-                        a.click();
-                        URL.revokeObjectURL(url);
-                        alert(`[${fileName}] 다운로드 완료!`);
-                        toggleSaveMenu();
-                    })
-                    .catch(() => {
-                        alert("파일을 찾을 수 없습니다.\n게임 내에서 먼저 세이브를 해주세요.");
-                    });
-            });
-        }
-
-        function uploadSave(event) {
+        async function uploadSave(event) {
             const file = event.target.files[0];
-            if (!file) return;
+            if (!file || !dosInterface) return;
 
-            waitForDos((fs) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
                     const data = new Uint8Array(e.target.result);
-                    fs.writeFile(file.name, data)
-                        .then(() => {
-                            alert(`[${file.name}] 업로드 완료! 게임에서 로드하세요.`);
-                            toggleSaveMenu();
-                        })
-                        .catch(() => alert("업로드 중 오류가 발생했습니다."));
-                };
-                reader.readAsArrayBuffer(file);
-                event.target.value = "";
-            });
+                    
+                    // v8에서 파일 쓰기 시도 (여러 경로 탐색)
+                    let success = false;
+                    const fs = dosInterface.fs || (dosInterface.layers && dosInterface.layers.fs);
+                    
+                    if (fs && typeof fs.writeFile === 'function') {
+                        await fs.writeFile(file.name, data);
+                        success = true;
+                    } else if (dosInterface.transport && dosInterface.transport.module && dosInterface.transport.module.FS) {
+                        // Emscripten 내부 FS 직접 접근
+                        dosInterface.transport.module.FS.writeFile(file.name, data);
+                        success = true;
+                    }
+
+                    if (success) {
+                        alert(`[${file.name}] 업로드 완료! 게임에서 로드하세요.`);
+                        toggleSaveMenu();
+                    } else {
+                        throw new Error("Write function not found");
+                    }
+                } catch (err) {
+                    console.error("Upload error:", err);
+                    alert("업로드 중 오류가 발생했습니다. 이 브라우저에서는 지원되지 않을 수 있습니다.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = "";
         }
 
         function changeZoom(amount) {
