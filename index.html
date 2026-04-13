@@ -176,16 +176,19 @@
             document.body.style.overflow = "hidden";
 
             try {
+                // 원본의 Dos 초기화 로직 유지
                 Dos(document.getElementById("dos"), {
                     url: "./nuasuw2.dat",
                     noCloud: true,
                     autoStart: true
                 }).then((ci) => {
+                    // ci 객체가 생성되는 즉시 전역 변수에 할당하여 downloadSaves에서 참조 가능하게 함
                     dosInterface = ci; 
                     
                     if (ci && typeof ci.persist === "function") {
                         ci.persist("eiketsu-save-data");
                     }
+                    // 원본의 실행 커맨드 보존
                     ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
                 });
             } catch (err) {
@@ -216,12 +219,17 @@
         }
 
         function downloadSaves() {
-            if (!dosInterface) return alert("게임이 로드되지 않았습니다.");
+            // dosInterface 할당 여부 확인 로직 보완
+            if (!dosInterface) {
+                alert("게임이 아직 로딩 중이거나 인터페이스를 찾을 수 없습니다.");
+                return;
+            }
             
             const fileName = prompt("다운로드할 세이브 파일명을 정확히 입력하세요.\n(영걸전 예시: SAVEDAT0.DAT, SAVEDAT1.DAT 등)", "SAVEDAT0.DAT");
             if (!fileName) return;
 
             try {
+                // js-dos v7+의 파일 시스템 접근 방식 준수
                 dosInterface.fs.readFile(fileName).then(data => {
                     const blob = new Blob([data], { type: "application/octet-stream" });
                     const url = URL.createObjectURL(blob);
@@ -234,10 +242,10 @@
                     toggleSaveMenu(); 
                 }).catch(e => {
                     console.error(e);
-                    alert("세이브 파일을 찾을 수 없습니다. 파일명을 다시 확인해주세요.");
+                    alert("파일을 찾을 수 없습니다. 게임 내에서 먼저 세이브를 해주세요.");
                 });
             } catch (err) {
-                alert("지원되지 않는 버전의 js-dos이거나 내부 오류가 발생했습니다.");
+                alert("파일 시스템 접근에 실패했습니다.");
             }
         }
 
@@ -267,207 +275,45 @@
         function changeZoom(amount) {
             currentZoom += amount;
             if (currentZoom < 100) currentZoom = 100;
-            if (currentZoom > 300) currentZoom = 300;<script>
-    const ENCODED_PW = "YWRtaW43Nzc=";
-    let dosInterface = null; 
-    let currentZoom = 100; 
+            if (currentZoom > 300) currentZoom = 300;
+            
+            const dosEl = document.getElementById("dos");
+            const wrapper = document.getElementById("dos-wrapper");
+            
+            const centerX = wrapper.scrollLeft + wrapper.clientWidth / 2;
+            const centerY = wrapper.scrollTop + wrapper.clientHeight / 2;
+            
+            const oldWidth = dosEl.clientWidth || wrapper.clientWidth;
+            const oldHeight = dosEl.clientHeight || wrapper.clientHeight;
 
-    function checkAccess() {
-        const isPassed = sessionStorage.getItem("is_passed");
-        const savedAdmin = sessionStorage.getItem("isAdmin");
-
-        if (isPassed === "true") {
-            showPage(savedAdmin === "true");
-            return;
-        }
-
-        const password = prompt("접속 암호를 입력하세요.");
-        if (password === "2026") {
-            sessionStorage.setItem("is_passed", "true");
-            sessionStorage.setItem("isAdmin", "false");
-            showPage(false);
-        } else if (btoa(password) === ENCODED_PW) { 
-            sessionStorage.setItem("is_passed", "true");
-            sessionStorage.setItem("isAdmin", "true");
-            showPage(true);
-        } else {
-            alert("암호가 틀렸습니다.");
-            location.reload();
-        }
-    }
-
-    function showPage(adminMode) {
-        document.getElementById("intro-layer").style.display = "flex";
-        if (adminMode) {
-            document.getElementById("admin-panel").style.display = "block";
-        }
-    }
-
-    async function launchGame() {
-        if (typeof gtag === 'function') {
-            gtag('event', 'play_game', {
-                'event_category': 'Game',
-                'event_label': 'Eiketsuden Start'
-            });
-        }
-
-        document.getElementById("intro-layer").style.display = "none";
-        document.getElementById("dos-wrapper").style.display = "block";
-        document.getElementById("top-bar").style.display = "flex";
-        
-        document.body.style.overflow = "hidden";
-
-        try {
-            // js-dos 인스턴스 생성 및 인터페이스 할당 보강
-            Dos(document.getElementById("dos"), {
-                url: "./nuasuw2.dat",
-                noCloud: true,
-                autoStart: true
-            }).then((ci) => {
-                // 핵심: ci 객체 전체를 전역 변수에 할당
-                dosInterface = ci; 
-                console.log("게임 인터페이스 로드 완료:", ci);
+            dosEl.style.width = currentZoom + "%";
+            dosEl.style.height = currentZoom + "%";
+            
+            setTimeout(() => {
+                const newWidth = dosEl.clientWidth;
+                const newHeight = dosEl.clientHeight;
                 
-                if (ci && typeof ci.persist === "function") {
-                    ci.persist("eiketsu-save-data");
-                }
+                const ratioX = newWidth / oldWidth;
+                const ratioY = newHeight / oldHeight;
                 
-                // 실행 커맨드 (기존 유지)
-                ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
-            }).catch(err => {
-                console.error("Dos 초기화 실패:", err);
-                alert("게임 초기화 중 오류가 발생했습니다.");
-            });
-        } catch (err) {
-            console.error("게임 실행 오류:", err);
+                wrapper.scrollLeft = centerX * ratioX - wrapper.clientWidth / 2;
+                wrapper.scrollTop = centerY * ratioY - wrapper.clientHeight / 2;
+            }, 50);
         }
-    }
 
-    function trackDownload() {
-        if (typeof gtag === 'function') {
-            gtag('event', 'file_download', {
-                'event_category': 'Download',
-                'event_label': 'Hero ZIP Download',
-                'file_name': 'hero.zip'
-            });
-        }
-    }
-
-    function toggleSaveMenu() {
-        const menu = document.getElementById("save-menu");
-        const bar = document.getElementById("top-bar");
-        if (menu.style.display === "flex") {
-            menu.style.display = "none";
-            bar.classList.remove("active");
-        } else {
-            menu.style.display = "flex";
-            bar.classList.add("active");
-        }
-    }
-
-    // 파일 다운로드 기능 수정
-    async function downloadSaves() {
-        if (!dosInterface) {
-            alert("게임이 아직 완전히 로드되지 않았거나 초기화에 실패했습니다.");
-            return;
-        }
-        
-        const fileName = prompt("다운로드할 세이브 파일명을 입력하세요.\n(예: SAVEDAT0.DAT)", "SAVEDAT0.DAT");
-        if (!fileName) return;
-
-        try {
-            // js-dos의 파일 시스템(fs) 객체 확인 후 읽기 실행
-            const fs = dosInterface.fs || (dosInterface.mainFn ? dosInterface.fs : null);
-            
-            if (!fs) {
-                throw new Error("파일 시스템에 접근할 수 없습니다.");
+        function forceEsc(e) {
+            if (e && e.cancelable) e.preventDefault();
+            if (dosInterface) {
+                try {
+                    if (typeof dosInterface.simulateKeyPress === 'function') {
+                        dosInterface.simulateKeyPress(27);
+                    }
+                } catch(err) {}
             }
-
-            const data = await fs.readFile(fileName);
-            const blob = new Blob([data], { type: "application/octet-stream" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            alert(`[${fileName}] 추출에 성공했습니다.`);
-            toggleSaveMenu(); 
-        } catch (e) {
-            console.error("세이브 다운로드 실패:", e);
-            alert("파일을 찾을 수 없습니다. 게임 내에서 먼저 세이브를 하셨는지 확인해 주세요.");
+            const evOpts = { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true };
+            document.dispatchEvent(new KeyboardEvent("keydown", evOpts));
+            setTimeout(() => document.dispatchEvent(new KeyboardEvent("keyup", evOpts)), 50);
         }
-    }
-
-    // 파일 업로드 기능 수정
-    function uploadSave(event) {
-        const file = event.target.files[0];
-        if (!file || !dosInterface) {
-            alert("게임이 실행 중이 아닙니다.");
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const data = new Uint8Array(e.target.result);
-            try {
-                const fs = dosInterface.fs;
-                await fs.writeFile(file.name, data);
-                alert(`[${file.name}] 업로드 성공!\n게임 내에서 '불러오기'를 진행하세요.`);
-                toggleSaveMenu(); 
-            } catch (err) {
-                console.error("업로드 오류:", err);
-                alert("파일 저장 중 오류가 발생했습니다.");
-            }
-        };
-        reader.readAsArrayBuffer(file);
-        event.target.value = ""; 
-    }
-
-    function changeZoom(amount) {
-        currentZoom += amount;
-        if (currentZoom < 100) currentZoom = 100;
-        if (currentZoom > 300) currentZoom = 300;
-        
-        const dosEl = document.getElementById("dos");
-        const wrapper = document.getElementById("dos-wrapper");
-        
-        const centerX = wrapper.scrollLeft + wrapper.clientWidth / 2;
-        const centerY = wrapper.scrollTop + wrapper.clientHeight / 2;
-        
-        const oldWidth = dosEl.clientWidth || wrapper.clientWidth;
-        const oldHeight = dosEl.clientHeight || wrapper.clientHeight;
-
-        dosEl.style.width = currentZoom + "%";
-        dosEl.style.height = currentZoom + "%";
-        
-        setTimeout(() => {
-            const newWidth = dosEl.clientWidth;
-            const newHeight = dosEl.clientHeight;
-            
-            const ratioX = newWidth / oldWidth;
-            const ratioY = newHeight / oldHeight;
-            
-            wrapper.scrollLeft = centerX * ratioX - wrapper.clientWidth / 2;
-            wrapper.scrollTop = centerY * ratioY - wrapper.clientHeight / 2;
-        }, 50);
-    }
-
-    function forceEsc(e) {
-        if (e && e.cancelable) e.preventDefault();
-        if (dosInterface) {
-            try {
-                // simulateKeyPress가 없는 버전을 대비해 양쪽 모두 호출
-                if (typeof dosInterface.simulateKeyPress === 'function') {
-                    dosInterface.simulateKeyPress(27);
-                }
-            } catch(err) {}
-        }
-        const evOpts = { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true };
-        document.dispatchEvent(new KeyboardEvent("keydown", evOpts));
-        setTimeout(() => document.dispatchEvent(new KeyboardEvent("keyup", evOpts)), 50);
-    }
-</script>
+    </script>
 </body>
 </html>
