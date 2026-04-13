@@ -31,7 +31,7 @@
         .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-bottom: 12px; }
         .start-btn:hover { background: #b71c1c; }
         
-        /* 수정된 다운로드 버튼 스타일 */
+        /* 다운로드 버튼 스타일 */
         .download-link { 
             display: block; 
             width: 100%; 
@@ -176,20 +176,25 @@
             document.body.style.overflow = "hidden";
 
             try {
-                // 원본의 Dos 초기화 로직 유지
                 Dos(document.getElementById("dos"), {
                     url: "./nuasuw2.dat",
                     noCloud: true,
                     autoStart: true
                 }).then((ci) => {
-                    // ci 객체가 생성되는 즉시 전역 변수에 할당하여 downloadSaves에서 참조 가능하게 함
+                    // 인터페이스 할당
                     dosInterface = ci; 
                     
                     if (ci && typeof ci.persist === "function") {
                         ci.persist("eiketsu-save-data");
                     }
-                    // 원본의 실행 커맨드 보존
-                    ci.dos.main(["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"]);
+                    
+                    // 실행 커맨드 보존 및 예외 방어
+                    const mainCmd = ["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"];
+                    if (ci.dos && typeof ci.dos.main === "function") {
+                        ci.dos.main(mainCmd);
+                    } else if (typeof ci.main === "function") {
+                        ci.main(mainCmd);
+                    }
                 });
             } catch (err) {
                 console.error("게임 실행 오류:", err);
@@ -218,55 +223,54 @@
             }
         }
 
+        // 파일 시스템(FS) 객체를 안전하게 찾는 헬퍼 함수
+        function getFS() {
+            if (!dosInterface) return null;
+            return dosInterface.fs || (dosInterface.dos && dosInterface.dos.fs) || null;
+        }
+
         function downloadSaves() {
-            // dosInterface 할당 여부 확인 로직 보완
-            if (!dosInterface) {
-                alert("게임이 아직 로딩 중이거나 인터페이스를 찾을 수 없습니다.");
+            const fs = getFS();
+            if (!fs) {
+                alert("게임 인터페이스를 로드하는 중입니다. 잠시 후 다시 시도해주세요.");
                 return;
             }
             
-            const fileName = prompt("다운로드할 세이브 파일명을 정확히 입력하세요.\n(영걸전 예시: SAVEDAT0.DAT, SAVEDAT1.DAT 등)", "SAVEDAT0.DAT");
+            const fileName = prompt("다운로드할 세이브 파일명을 입력하세요.\n(예: SAVEDAT0.DAT)", "SAVEDAT0.DAT");
             if (!fileName) return;
 
-            try {
-                // js-dos v7+의 파일 시스템 접근 방식 준수
-                dosInterface.fs.readFile(fileName).then(data => {
-                    const blob = new Blob([data], { type: "application/octet-stream" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = fileName;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    alert(`[${fileName}] 다운로드가 완료되었습니다.`);
-                    toggleSaveMenu(); 
-                }).catch(e => {
-                    console.error(e);
-                    alert("파일을 찾을 수 없습니다. 게임 내에서 먼저 세이브를 해주세요.");
-                });
-            } catch (err) {
-                alert("파일 시스템 접근에 실패했습니다.");
-            }
+            fs.readFile(fileName).then(data => {
+                const blob = new Blob([data], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+                alert(`[${fileName}] 다운로드 완료!`);
+                toggleSaveMenu(); 
+            }).catch(e => {
+                alert("파일을 찾을 수 없습니다. 게임 내에서 먼저 세이브를 해주세요.");
+            });
         }
 
         function uploadSave(event) {
             const file = event.target.files[0];
-            if (!file || !dosInterface) return;
+            const fs = getFS();
+            if (!file || !fs) {
+                alert("파일을 선택하지 않았거나 게임이 로드되지 않았습니다.");
+                return;
+            }
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
-                try {
-                    dosInterface.fs.writeFile(file.name, data).then(() => {
-                        alert(`[${file.name}] 업로드 완료!\n게임 내에서 해당 슬롯을 로드해 주세요.`);
-                        toggleSaveMenu(); 
-                    }).catch(err => {
-                        console.error(err);
-                        alert("파일 덮어쓰기 중 오류가 발생했습니다.");
-                    });
-                } catch(err) {
-                    alert("업로드 처리 중 오류가 발생했습니다.");
-                }
+                fs.writeFile(file.name, data).then(() => {
+                    alert(`[${file.name}] 업로드 완료! 게임에서 로드하세요.`);
+                    toggleSaveMenu(); 
+                }).catch(err => {
+                    alert("업로드 중 오류가 발생했습니다.");
+                });
             };
             reader.readAsArrayBuffer(file);
             event.target.value = ""; 
