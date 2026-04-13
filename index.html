@@ -10,7 +10,6 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-PW92P22RPV', {
           cookie_domain: 'dosgame.pages.dev'
       });
@@ -31,24 +30,11 @@
         .start-btn:hover { background: #b71c1c; }
         
         .download-link { 
-            display: block; 
-            width: 100%; 
-            padding: 15px 0; 
-            font-size: 1rem; 
-            font-weight: bold; 
-            color: #2c3e50; 
-            background: #ffffff; 
-            border: 2px solid #2c3e50; 
-            border-radius: 8px; 
-            text-decoration: none; 
-            transition: all 0.3s; 
-            box-sizing: border-box;
+            display: block; width: 100%; padding: 15px 0; font-size: 1rem; font-weight: bold; 
+            color: #2c3e50; background: #ffffff; border: 2px solid #2c3e50; border-radius: 8px; 
+            text-decoration: none; transition: all 0.3s; box-sizing: border-box;
         }
-        .download-link:hover { 
-            background: #f1f2f6; 
-            color: #b71c1c;
-            border-color: #b71c1c;
-        }
+        .download-link:hover { background: #f1f2f6; color: #b71c1c; border-color: #b71c1c; }
 
         .mobile-warning { font-size: 0.85rem; color: #d32f2f; margin-top: 15px; margin-bottom: 0; font-weight: bold; }
 
@@ -127,7 +113,6 @@
         const ENCODED_PW = "YWRtaW43Nzc=";
         let dosInterface = null;
         let currentZoom = 100;
-        let dosReady = false; // FS 준비 완료 플래그
 
         function checkAccess() {
             const isPassed = sessionStorage.getItem("is_passed");
@@ -173,31 +158,34 @@
             document.getElementById("top-bar").style.display = "flex";
             document.body.style.overflow = "hidden";
 
-            dosReady = false;
             dosInterface = null;
 
             try {
-                Dos(document.getElementById("dos"), {
+                const ciPromise = Dos(document.getElementById("dos"), {
                     url: "./nuasuw2.dat",
                     noCloud: true,
-                    autoStart: true
-                }).then((ci) => {
-                    dosInterface = ci;
-
-                    if (ci && typeof ci.persist === "function") {
-                        ci.persist("eiketsu-save-data");
+                    autoStart: true,
+                    onEvent: (event, ci) => {
+                        // v8: ci-ready 이벤트로 인터페이스 수신
+                        if (event === "ci-ready") {
+                            dosInterface = ci;
+                            console.log("=== ci-ready 이벤트 수신, dosInterface 설정됨 ===");
+                            console.log("ci 키 목록:", Object.keys(ci || {}));
+                        }
                     }
-
-                    const mainCmd = ["-c", "config -set cpu cycles=15000", "-c", "HERO.COM"];
-                    if (ci.dos && typeof ci.dos.main === "function") {
-                        ci.dos.main(mainCmd);
-                    } else if (typeof ci.main === "function") {
-                        ci.main(mainCmd);
-                    }
-
-                    // FS 준비 완료 표시 (인터페이스 할당 직후)
-                    dosReady = true;
                 });
+
+                // v7 이하 호환: Promise 반환 시 대비
+                if (ciPromise && typeof ciPromise.then === "function") {
+                    ciPromise.then((ci) => {
+                        if (ci && !dosInterface) {
+                            dosInterface = ci;
+                            console.log("=== then() 방식으로 ci 수신 ===");
+                            console.log("ci 키 목록:", Object.keys(ci || {}));
+                        }
+                    });
+                }
+
             } catch (err) {
                 console.error("게임 실행 오류:", err);
             }
@@ -225,18 +213,19 @@
             }
         }
 
-        // 여러 버전의 js-dos FS 경로를 순서대로 시도
+        // v8 포함 다양한 경로 시도
         function getFS() {
             if (!dosInterface) return null;
             return dosInterface.fs
+                || dosInterface.emu?.fs
+                || dosInterface.ci?.fs
                 || (dosInterface.dos && dosInterface.dos.fs)
                 || (dosInterface.layers && dosInterface.layers.fs)
-                || (dosInterface.jsdos && dosInterface.jsdos.fs)
                 || null;
         }
 
-        // FS가 준비될 때까지 폴링 후 콜백 실행
-        function waitForDos(callback, maxTries = 20) {
+        // FS 준비될 때까지 폴링 후 콜백 실행
+        function waitForDos(callback, maxTries = 30) {
             let tries = 0;
             const interval = setInterval(() => {
                 const fs = getFS();
@@ -245,7 +234,12 @@
                     callback(fs);
                 } else if (++tries >= maxTries) {
                     clearInterval(interval);
-                    alert("게임 인터페이스를 찾을 수 없습니다.\n게임이 완전히 실행된 후 다시 시도해주세요.");
+                    // dosInterface 상태 디버그 출력
+                    console.log("dosInterface 현재 상태:", dosInterface);
+                    if (dosInterface) {
+                        console.log("dosInterface 키 목록:", Object.keys(dosInterface));
+                    }
+                    alert("게임 인터페이스를 찾을 수 없습니다.\n게임이 완전히 실행된 후 다시 시도하거나,\n개발자 도구 Console의 로그를 확인해주세요.");
                 }
             }, 500);
         }
@@ -313,10 +307,8 @@
             setTimeout(() => {
                 const newWidth = dosEl.clientWidth;
                 const newHeight = dosEl.clientHeight;
-
                 const ratioX = newWidth / oldWidth;
                 const ratioY = newHeight / oldHeight;
-
                 wrapper.scrollLeft = centerX * ratioX - wrapper.clientWidth / 2;
                 wrapper.scrollTop = centerY * ratioY - wrapper.clientHeight / 2;
             }, 50);
