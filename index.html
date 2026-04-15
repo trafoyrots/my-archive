@@ -1,175 +1,385 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>삼국지 영걸전 아카이브</title>
-    
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PW92P22RPV"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-PW92P22RPV', { cookie_domain: 'dosgame.pages.dev' });
-    </script>
-    
-    <link rel="stylesheet" href="js-dos.css">
-    <script src="js-dos.js"></script>
-
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
-        .intro-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
-        .intro-content { width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 40px; box-sizing: border-box; }
-        .game-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        h1 { font-size: 2rem; color: #2c3e50; margin: 0 0 15px 0; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
-        p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
-        .start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-bottom: 12px; }
-        .start-btn:hover { background: #b71c1c; }
-        #dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; overflow: auto; }
-        #dos { width: 100%; height: 100%; transform-origin: top left; }
-        .top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; }
-        .top-bar:hover, .top-bar.active { opacity: 1; background: rgba(0,0,0,0.6); }
-        .top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
-        .save-menu { display: none; position: fixed; top: 55px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 130px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>삼국지 영걸전 아카이브</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-PW92P22RPV"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-PW92P22RPV', { cookie_domain: 'dosgame.pages.dev' });
+</script>
+<link rel="stylesheet" href="js-dos.css">
+<script src="js-dos.js"></script>
+<style>
+body, html { margin: 0; padding: 0; width: 100%; min-height: 100%; background: #f4f4f9; color: #333; font-family: 'Malgun Gothic', sans-serif; touch-action: manipulation; }
+.intro-container { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; text-align: center; background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
+.intro-content { width: 100%; max-width: 500px; padding: 30px; border-radius: 20px; background: rgba(255, 255, 255, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 40px; box-sizing: border-box; }
+.game-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+h1 { font-size: 2rem; color: #2c3e50; margin: 0 0 15px 0; border-bottom: 3px solid #b71c1c; display: inline-block; padding-bottom: 5px; }
+p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
+.start-btn { display: block; width: 100%; padding: 18px 0; font-size: 1.2rem; font-weight: bold; color: #fff; background: #2c3e50; border: none; border-radius: 8px; cursor: pointer; transition: background 0.3s; margin-bottom: 12px; }
+.start-btn:hover { background: #b71c1c; }
+#dos-wrapper { width: 100vw; height: 100vh; display: none; position: fixed; top: 0; left: 0; background: #000; z-index: 1000; overflow: auto; }
+#dos { width: 100%; height: 100%; transform-origin: top left; }
+.top-bar { display: none; position: fixed; top: 10px; right: 10px; z-index: 2000; gap: 6px; opacity: 0.3; transition: opacity 0.3s; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; }
+.top-bar:hover, .top-bar.active { opacity: 1; background: rgba(0,0,0,0.6); }
+.top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+.top-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.save-menu { display: none; position: fixed; top: 55px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 160px; }
+/* 저장 상태 토스트 알림 */
+#save-toast { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(44,62,80,0.92); color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 0.95rem; z-index: 3000; pointer-events: none; }
+</style>
 </head>
+
 <body onload="checkAccess()" oncontextmenu="return false;">
 
-    <div id="intro-layer" class="intro-container" style="display: none;">
-        <div class="intro-content">
-            <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
-            <h1>삼국지 영걸전</h1>
-            <p>원본 저작권은 KOEI에 있습니다.</p>
-            <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
-            <a href="hero.zip" style="text-decoration:none; color:#2c3e50; font-weight:bold;">💾 게임 파일 내려받기</a>
-        </div>
-    </div>
+<div id="intro-layer" class="intro-container" style="display: none;">
+  <div class="intro-content">
+    <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
+    <h1>삼국지 영걸전</h1>
+    <p>원본 저작권은 KOEI에 있습니다.<br>게임 진행 상황은 이 브라우저에 자동 저장됩니다.</p>
+    <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
+    <a href="hero.zip" style="text-decoration:none; color:#2c3e50; font-weight:bold;">💾 게임 파일 내려받기</a>
+  </div>
+</div>
 
-    <div id="dos-wrapper"><div id="dos"></div></div>
+<div id="dos-wrapper"><div id="dos"></div></div>
 
-    <div id="top-bar" class="top-bar">
-        <button class="top-btn" onclick="toggleSaveMenu()">💾 세이브</button>
-        <button class="top-btn" onclick="forceEsc()">⌨️ ESC</button>
-        <button class="top-btn" onclick="changeZoom(50)">🔍 +</button>
-        <button class="top-btn" onclick="changeZoom(-50)">🔎 -</button>
-    </div>
+<div id="top-bar" class="top-bar">
+  <button class="top-btn" id="btn-save" onclick="manualSave()" title="지금 즉시 저장">💾 저장</button>
+  <button class="top-btn" onclick="toggleSaveMenu()">📁 파일</button>
+  <button class="top-btn" onclick="forceEsc()">⌨️ ESC</button>
+  <button class="top-btn" onclick="changeZoom(50)">🔍 +</button>
+  <button class="top-btn" onclick="changeZoom(-50)">🔎 -</button>
+</div>
 
-    <div id="save-menu" class="save-menu">
-        <button class="top-btn" onclick="document.getElementById('save-upload').click()">📂 파일 업로드</button>
-        <button class="top-btn" onclick="downloadSaves()">💾 파일 다운로드</button>
-    </div>
+<div id="save-menu" class="save-menu">
+  <button class="top-btn" onclick="exportSave()">📤 백업 다운로드</button>
+  <button class="top-btn" onclick="document.getElementById('save-upload').click()">📥 백업 업로드</button>
+  <button class="top-btn" onclick="confirmReset()" style="background:rgba(183,28,28,0.8);">🗑️ 저장 초기화</button>
+</div>
+<input type="file" id="save-upload" style="display: none;" accept=".bin,.dat,.sav" onchange="importSave(event)">
 
-    <input type="file" id="save-upload" style="display: none;" onchange="uploadSave(event)">
+<div id="save-toast"></div>
 
-    <script>
-        const ENCODED_PW = "YWRtaW43Nzc=";
-        let dosInterface = null;
-        let currentZoom = 100;
+<script>
+// =====================================================
+// 설정
+// =====================================================
+const ENCODED_PW   = "YWRtaW43Nzc=";
+const BUNDLE_URL   = "./nuasuw2.dat";
+const IDB_NAME     = "yeokgul-saves";
+const IDB_STORE    = "saves";
+const SAVE_KEY     = "changesBundle";  // IndexedDB 키
+const AUTO_SAVE_INTERVAL = 60 * 1000; // 1분마다 자동저장
 
-        function checkAccess() {
-            if (sessionStorage.getItem("is_passed") === "true") {
-                showPage();
-                return;
-            }
-            const password = prompt("접속 암호를 입력하세요.");
-            if (password === "2026" || btoa(password) === ENCODED_PW) {
-                sessionStorage.setItem("is_passed", "true");
-                showPage();
-            } else {
-                alert("암호가 틀렸습니다.");
-                location.reload();
-            }
+// =====================================================
+// 상태 변수
+// =====================================================
+let dosInterface   = null;
+let currentZoom    = 100;
+let autoSaveTimer  = null;
+let isSaving       = false;
+
+// =====================================================
+// 접근 제어
+// =====================================================
+function checkAccess() {
+  if (sessionStorage.getItem("is_passed") === "true") {
+    showPage();
+    return;
+  }
+  const password = prompt("접속 암호를 입력하세요.");
+  if (password === "2026" || btoa(password) === ENCODED_PW) {
+    sessionStorage.setItem("is_passed", "true");
+    showPage();
+  } else {
+    alert("암호가 틀렸습니다.");
+    location.reload();
+  }
+}
+
+function showPage() {
+  document.getElementById("intro-layer").style.display = "flex";
+}
+
+// =====================================================
+// IndexedDB 헬퍼
+// =====================================================
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = e => {
+      e.target.result.createObjectStore(IDB_STORE);
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, "readonly");
+    const req = tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+async function idbSet(key, value) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, "readwrite");
+    const req = tx.objectStore(IDB_STORE).put(value, key);
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+async function idbDelete(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, "readwrite");
+    const req = tx.objectStore(IDB_STORE).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+// =====================================================
+// 토스트 알림
+// =====================================================
+function showToast(msg, duration = 2000) {
+  const el = document.getElementById("save-toast");
+  el.textContent = msg;
+  el.style.display = "block";
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.display = "none"; }, duration);
+}
+
+// =====================================================
+// 게임 실행
+// =====================================================
+async function launchGame() {
+  document.getElementById("intro-layer").style.display = "none";
+  document.getElementById("dos-wrapper").style.display = "block";
+  document.getElementById("top-bar").style.display = "flex";
+
+  // 이전 저장 데이터 조회
+  let changesBundle = null;
+  try {
+    changesBundle = await idbGet(SAVE_KEY);
+    if (changesBundle) {
+      console.log("이전 저장 데이터 발견 — 이어하기 모드로 시작");
+    }
+  } catch(e) {
+    console.warn("저장 데이터 조회 실패:", e);
+  }
+
+  try {
+    // changesBundle이 있으면 두 번째 인자로 전달 → 이어하기
+    // 없으면 처음 시작
+    const dosOptions = {
+      onEvent: (event, ci) => {
+        if (event === "ci-ready") {
+          dosInterface = ci;
+          console.log("CI 준비 완료");
+          startAutoSave();
+          showToast(changesBundle ? "✅ 이전 저장 데이터를 불러왔습니다" : "🎮 새 게임을 시작합니다");
         }
+      }
+    };
 
-        function showPage() {
-            document.getElementById("intro-layer").style.display = "flex";
-        }
+    if (changesBundle) {
+      // 이어하기: 원본 번들 + 변경분 번들을 함께 전달
+      const originalResp  = await fetch(BUNDLE_URL);
+      const originalBytes = new Uint8Array(await originalResp.arrayBuffer());
+      const changesBlob   = URL.createObjectURL(new Blob([changesBundle]));
+      const originalBlob  = URL.createObjectURL(new Blob([originalBytes]));
 
-        async function launchGame() {
-            document.getElementById("intro-layer").style.display = "none";
-            document.getElementById("dos-wrapper").style.display = "block";
-            document.getElementById("top-bar").style.display = "flex";
+      dosOptions.url         = originalBlob;
+      dosOptions.changesUrl  = changesBlob;
+    } else {
+      // 새 게임: 원본 번들만
+      dosOptions.url = BUNDLE_URL;
+    }
 
-            try {
-                // v8 방식의 초기화
-                Dos(document.getElementById("dos"), {
-                    url: "./nuasuw2.dat",
-                    autoStart: true,
-                    onEvent: (event, ci) => {
-                        if (event === "ci-ready") {
-                            dosInterface = ci;
-                            console.log("v8 인터페이스 준비 완료");
-                        }
-                    }
-                });
-            } catch (err) {
-                console.error("실행 오류:", err);
-            }
-        }
+    Dos(document.getElementById("dos"), dosOptions);
 
-        async function downloadSaves() {
-            if (!dosInterface) return alert("게임이 아직 로드되지 않았습니다.");
-            
-            const fileName = prompt("다운로드할 세이브 파일명(대소문자 구분)", "SAVEDAT0.DAT");
-            if (!fileName) return;
+  } catch(err) {
+    console.error("게임 실행 오류:", err);
+    showToast("❌ 게임 실행 중 오류가 발생했습니다");
+  }
+}
 
-            try {
-                // v8 전용: ci에서 직접 fsGetFilePromise 호출
-                const data = await dosInterface.fsGetFilePromise(fileName);
-                if (!data) throw new Error();
+// =====================================================
+// 세이브 핵심 함수: ci.persist() → IndexedDB
+// =====================================================
+async function doSave() {
+  if (!dosInterface || isSaving) return false;
+  isSaving = true;
 
-                const blob = new Blob([data], { type: "application/octet-stream" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = fileName;
-                a.click();
-                URL.revokeObjectURL(url);
-            } catch (e) {
-                alert("파일을 찾을 수 없습니다. 게임 내에서 세이브를 먼저 진행하세요.");
-            }
-        }
+  try {
+    // onlyChanges=true: 원본 번들 대비 변경된 파일만 담은 경량 번들 반환
+    const changesBundle = await dosInterface.persist(true);
 
-        async function uploadSave(event) {
-            const file = event.target.files[0];
-            if (!file || !dosInterface) return;
+    if (changesBundle && changesBundle.length > 0) {
+      await idbSet(SAVE_KEY, changesBundle);
+      console.log(`자동저장 완료 (${(changesBundle.length / 1024).toFixed(1)} KB)`);
+      return true;
+    } else {
+      console.log("변경 사항 없음 — 저장 생략");
+      return false;
+    }
+  } catch(e) {
+    console.error("저장 오류:", e);
+    return false;
+  } finally {
+    isSaving = false;
+  }
+}
 
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const data = new Uint8Array(e.target.result);
-                try {
-                    // v8 업로드: transport 계층을 통한 파일 주입 시도
-                    if (dosInterface.transport && dosInterface.transport.module && dosInterface.transport.module.FS) {
-                        dosInterface.transport.module.FS.writeFile(file.name, data);
-                        alert("업로드 완료! 게임에서 로드하세요.");
-                    } else {
-                        alert("현재 환경에서 업로드가 지원되지 않습니다.");
-                    }
-                    toggleSaveMenu();
-                } catch (err) {
-                    alert("업로드 중 오류 발생");
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
+// =====================================================
+// 자동저장 (1분 주기)
+// =====================================================
+function startAutoSave() {
+  if (autoSaveTimer) clearInterval(autoSaveTimer);
+  autoSaveTimer = setInterval(async () => {
+    const ok = await doSave();
+    if (ok) showToast("💾 자동저장 완료");
+  }, AUTO_SAVE_INTERVAL);
+}
 
-        function toggleSaveMenu() {
-            const menu = document.getElementById("save-menu");
-            menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
-        }
+// =====================================================
+// 수동 저장 버튼
+// =====================================================
+async function manualSave() {
+  const btn = document.getElementById("btn-save");
+  btn.disabled = true;
+  btn.textContent = "저장 중...";
+  showToast("💾 저장 중...");
 
-        function changeZoom(amount) {
-            currentZoom = Math.min(Math.max(currentZoom + amount, 100), 300);
-            const dosEl = document.getElementById("dos");
-            dosEl.style.width = currentZoom + "%";
-            dosEl.style.height = currentZoom + "%";
-        }
+  const ok = await doSave();
+  showToast(ok ? "✅ 저장되었습니다" : "⚠️ 변경 사항이 없습니다");
 
-        function forceEsc() {
-            if (dosInterface && typeof dosInterface.simulateKeyPress === 'function') {
-                dosInterface.simulateKeyPress(27);
-            }
-        }
-    </script>
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = "💾 저장";
+  }, 1500);
+}
+
+// =====================================================
+// 페이지 종료 시 자동저장
+// (beforeunload는 async 불가 → pagehide 사용)
+// =====================================================
+window.addEventListener("pagehide", () => {
+  if (!dosInterface) return;
+  // 동기적으로 호출 (best-effort)
+  dosInterface.persist(true).then(bundle => {
+    if (bundle && bundle.length > 0) {
+      idbSet(SAVE_KEY, bundle).catch(() => {});
+    }
+  }).catch(() => {});
+});
+
+// beforeunload: 저장 중임을 사용자에게 알림
+window.addEventListener("beforeunload", (e) => {
+  if (!dosInterface) return;
+  // 비동기 저장 시도 (보장 불가, pagehide가 더 안정적)
+  doSave();
+});
+
+// =====================================================
+// 백업 내보내기 (파일 다운로드)
+// =====================================================
+async function exportSave() {
+  if (!dosInterface) return alert("게임이 로드되지 않았습니다.");
+
+  showToast("📤 백업 준비 중...");
+  const changesBundle = await dosInterface.persist(true);
+
+  if (!changesBundle || changesBundle.length === 0) {
+    return showToast("⚠️ 저장된 데이터가 없습니다");
+  }
+
+  const blob = new Blob([changesBundle], { type: "application/octet-stream" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  const ts   = new Date().toISOString().slice(0,16).replace("T","_").replace(/:/g,"-");
+  a.href     = url;
+  a.download = `yeokgul_save_${ts}.bin`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast("✅ 백업 파일을 다운로드했습니다");
+  toggleSaveMenu();
+}
+
+// =====================================================
+// 백업 가져오기 (파일 업로드)
+// =====================================================
+async function importSave(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      await idbSet(SAVE_KEY, data);
+      showToast("✅ 백업을 불러왔습니다. 페이지를 새로고침하면 적용됩니다.", 4000);
+      toggleSaveMenu();
+
+      // 자동 새로고침 여부 확인
+      if (confirm("백업 데이터를 불러왔습니다.\n지금 바로 적용하려면 페이지를 새로고침해야 합니다.\n새로고침할까요?")) {
+        location.reload();
+      }
+    } catch(err) {
+      alert("백업 파일 적용 중 오류가 발생했습니다.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = "";
+}
+
+// =====================================================
+// 저장 데이터 초기화
+// =====================================================
+async function confirmReset() {
+  if (!confirm("저장된 진행 상황을 완전히 삭제하고 처음부터 시작하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+  try {
+    await idbDelete(SAVE_KEY);
+    showToast("🗑️ 저장 데이터를 삭제했습니다. 새로고침하면 처음부터 시작합니다.", 4000);
+    toggleSaveMenu();
+  } catch(e) {
+    alert("초기화 중 오류가 발생했습니다.");
+  }
+}
+
+// =====================================================
+// UI 헬퍼
+// =====================================================
+function toggleSaveMenu() {
+  const menu = document.getElementById("save-menu");
+  menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+}
+
+function changeZoom(amount) {
+  currentZoom = Math.min(Math.max(currentZoom + amount, 100), 300);
+  const dosEl = document.getElementById("dos");
+  dosEl.style.width  = currentZoom + "%";
+  dosEl.style.height = currentZoom + "%";
+}
+
+function forceEsc() {
+  if (dosInterface && typeof dosInterface.simulateKeyPress === "function") {
+    dosInterface.simulateKeyPress(27);
+  }
+}
+</script>
 </body>
 </html>
