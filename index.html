@@ -29,7 +29,6 @@ p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
 .top-btn { padding: 8px 10px; background: rgba(44, 62, 80, 0.8); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
 .top-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .save-menu { display: none; position: fixed; top: 55px; right: 15px; z-index: 2000; flex-direction: column; gap: 8px; width: 160px; }
-/* 저장 상태 토스트 알림 */
 #save-toast { display: none; position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(44,62,80,0.92); color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 0.95rem; z-index: 3000; pointer-events: none; }
 </style>
 </head>
@@ -40,7 +39,7 @@ p { margin-bottom: 30px; color: #666; font-size: 1rem; line-height: 1.5; }
   <div class="intro-content">
     <img src="sddefault.jpg" alt="삼국지 영걸전" class="game-img">
     <h1>삼국지 영걸전</h1>
-    <p>원본 저작권은 KOEI에 있습니다.<br>게임 진행 상황은 이 브라우저에 자동 저장됩니다.</p>
+    <p>원본 저작권은 KOEI에 있습니다.<br>게임 진행 상황은 수동으로 저장해야 합니다.</p>
     <button class="start-btn" onclick="launchGame()">게임 플레이하기</button>
     <a href="hero.zip" style="text-decoration:none; color:#2c3e50; font-weight:bold;">💾 게임 파일 내려받기</a>
   </div>
@@ -73,15 +72,13 @@ const ENCODED_PW   = "YWRtaW43Nzc=";
 const BUNDLE_URL   = "./nuasuw2.dat";
 const IDB_NAME     = "yeokgul-saves";
 const IDB_STORE    = "saves";
-const SAVE_KEY     = "changesBundle";  // IndexedDB 키
-const AUTO_SAVE_INTERVAL = 60 * 1000; // 1분마다 자동저장
+const SAVE_KEY     = "changesBundle";  
 
 // =====================================================
 // 상태 변수
 // =====================================================
 let dosInterface   = null;
 let currentZoom    = 100;
-let autoSaveTimer  = null;
 let isSaving       = false;
 
 // =====================================================
@@ -169,7 +166,6 @@ async function launchGame() {
   document.getElementById("dos-wrapper").style.display = "block";
   document.getElementById("top-bar").style.display = "flex";
 
-  // 이전 저장 데이터 조회
   let changesBundle = null;
   try {
     changesBundle = await idbGet(SAVE_KEY);
@@ -181,21 +177,17 @@ async function launchGame() {
   }
 
   try {
-    // changesBundle이 있으면 두 번째 인자로 전달 → 이어하기
-    // 없으면 처음 시작
     const dosOptions = {
       onEvent: (event, ci) => {
         if (event === "ci-ready") {
           dosInterface = ci;
           console.log("CI 준비 완료");
-          startAutoSave();
           showToast(changesBundle ? "✅ 이전 저장 데이터를 불러왔습니다" : "🎮 새 게임을 시작합니다");
         }
       }
     };
 
     if (changesBundle) {
-      // 이어하기: 원본 번들 + 변경분 번들을 함께 전달
       const originalResp  = await fetch(BUNDLE_URL);
       const originalBytes = new Uint8Array(await originalResp.arrayBuffer());
       const changesBlob   = URL.createObjectURL(new Blob([changesBundle]));
@@ -204,7 +196,6 @@ async function launchGame() {
       dosOptions.url         = originalBlob;
       dosOptions.changesUrl  = changesBlob;
     } else {
-      // 새 게임: 원본 번들만
       dosOptions.url = BUNDLE_URL;
     }
 
@@ -217,19 +208,18 @@ async function launchGame() {
 }
 
 // =====================================================
-// 세이브 핵심 함수: ci.persist() → IndexedDB
+// 세이브 핵심 함수
 // =====================================================
 async function doSave() {
   if (!dosInterface || isSaving) return false;
   isSaving = true;
 
   try {
-    // onlyChanges=true: 원본 번들 대비 변경된 파일만 담은 경량 번들 반환
     const changesBundle = await dosInterface.persist(true);
 
     if (changesBundle && changesBundle.length > 0) {
       await idbSet(SAVE_KEY, changesBundle);
-      console.log(`자동저장 완료 (${(changesBundle.length / 1024).toFixed(1)} KB)`);
+      console.log(`저장 완료 (${(changesBundle.length / 1024).toFixed(1)} KB)`);
       return true;
     } else {
       console.log("변경 사항 없음 — 저장 생략");
@@ -241,17 +231,6 @@ async function doSave() {
   } finally {
     isSaving = false;
   }
-}
-
-// =====================================================
-// 자동저장 (1분 주기)
-// =====================================================
-function startAutoSave() {
-  if (autoSaveTimer) clearInterval(autoSaveTimer);
-  autoSaveTimer = setInterval(async () => {
-    const ok = await doSave();
-    if (ok) showToast("💾 자동저장 완료");
-  }, AUTO_SAVE_INTERVAL);
 }
 
 // =====================================================
@@ -271,27 +250,6 @@ async function manualSave() {
     btn.textContent = "💾 저장";
   }, 1500);
 }
-
-// =====================================================
-// 페이지 종료 시 자동저장
-// (beforeunload는 async 불가 → pagehide 사용)
-// =====================================================
-window.addEventListener("pagehide", () => {
-  if (!dosInterface) return;
-  // 동기적으로 호출 (best-effort)
-  dosInterface.persist(true).then(bundle => {
-    if (bundle && bundle.length > 0) {
-      idbSet(SAVE_KEY, bundle).catch(() => {});
-    }
-  }).catch(() => {});
-});
-
-// beforeunload: 저장 중임을 사용자에게 알림
-window.addEventListener("beforeunload", (e) => {
-  if (!dosInterface) return;
-  // 비동기 저장 시도 (보장 불가, pagehide가 더 안정적)
-  doSave();
-});
 
 // =====================================================
 // 백업 내보내기 (파일 다운로드)
@@ -334,7 +292,6 @@ async function importSave(event) {
       showToast("✅ 백업을 불러왔습니다. 페이지를 새로고침하면 적용됩니다.", 4000);
       toggleSaveMenu();
 
-      // 자동 새로고침 여부 확인
       if (confirm("백업 데이터를 불러왔습니다.\n지금 바로 적용하려면 페이지를 새로고침해야 합니다.\n새로고침할까요?")) {
         location.reload();
       }
