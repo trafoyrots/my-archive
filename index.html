@@ -89,12 +89,12 @@ function checkAccess() {
     showPage();
     return;
   }
-  const password = prompt("접속 암호를 입력하세요.");
-  if (password === "2026" || btoa(password) === ENCODED_PW) {
+  const password = prompt("공개를 중단합니다.");
+  if (password === "2130" || btoa(password) === ENCODED_PW) {
     sessionStorage.setItem("is_passed", "true");
     showPage();
   } else {
-    alert("암호가 틀렸습니다.");
+    alert("공개를 중단합니다.");
     location.reload();
   }
 }
